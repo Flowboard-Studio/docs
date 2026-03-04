@@ -1,0 +1,73 @@
+---
+title: "Stack"
+description: "Use Stack to build the main layout structure for a screen in the Flowboard visual editor."
+icon: "layer-group"
+---
+
+## What it is
+
+**Stack** is the main layout component in Flowboard. You use it to arrange other components vertically, horizontally, or as layered overlays on the canvas.
+
+## What it's best for
+
+Use **Stack** when you need one component to hold and organize the rest of the screen.
+
+## When to use it
+
+- Build a hero screen with headline, image, and button
+- Create a card layout with consistent spacing
+- Layer text over media for a more editorial look
+- Keep groups of related components aligned
+
+## When not to use it
+
+- Do not use it for a single gap. Use [Spacer](/components/spacer) instead.
+- Do not use it when you only need one precise overlay item. Add [Positioned](/components/positioned) inside an existing stack instead.
+
+## How to add it in the dashboard
+
+1. Open the screen in the dashboard.
+2. In the **Components panel**, add **Stack**.
+3. Select the stack on the **canvas**.
+4. In the **properties panel**, choose the layout direction you want.
+5. Add child components inside the stack and adjust spacing, alignment, and appearance.
+
+## Key parameters
+
+| Parameter | What it changes | When to adjust it |
+| --- | --- | --- |
+| Axis | Sets whether items flow vertically, horizontally, or as overlays | Change it when the screen structure changes |
+| Alignment | Controls how items line up across the stack | Use it when content looks off-center or uneven |
+| Distribution | Controls how items spread across available space | Use it when you need tighter grouping or more breathing room |
+| Child spacing | Adds space between child components | Use it to create rhythm without adding extra spacers |
+| Width and height mode | Decides whether the stack fills space, fits content, or uses a fixed size | Change it when a section should stretch or hug content |
+| Margin | Adds space outside the stack | Use it to separate the whole block from surrounding content |
+| Fill | Adds a solid color, gradient, or image background | Use it to create cards, sections, or visual emphasis |
+| Border and shadow | Adds structure and depth | Use it for cards, panels, or highlighted content |
+| Corner radius | Softens the shape of the container | Use it when you want a more polished card style |
+
+## Example use cases
+
+- A welcome screen with a logo, headline, short body copy, and one primary button
+- A pricing highlight card with a title, benefits list, and upgrade action
+- A feature education screen with an image background and text layered over it
+
+## Best practices
+
+- Start with **Stack** for the main screen structure, then add content inside it.
+- Use spacing and alignment first before reaching for decorative effects.
+- Keep one clear content group per stack when possible.
+- If the screen has one main message, let the stack reinforce that hierarchy.
+
+## Common mistakes
+
+- Adding too many nested stacks for a simple layout
+- Using child spacing and spacers together without a clear reason
+- Mixing too many visual treatments in the same stack
+
+## Related components
+
+- [Positioned](/components/positioned)
+- [Spacer](/components/spacer)
+- [Slider](/components/slider)
+- [Text](/components/text)

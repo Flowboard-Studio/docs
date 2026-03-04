@@ -1,0 +1,72 @@
+---
+title: "Wheel Picker"
+description: "Use Wheel Picker when users should scroll to one value from an ordered set of options."
+icon: "arrows-spin"
+---
+
+## What it is
+
+**Wheel Picker** lets users scroll through an ordered set of options and stop on one value.
+
+## What it's best for
+
+Use it when the choices follow a sequence, scale, or range and should feel quick to scan.
+
+## When to use it
+
+- Age
+- Height
+- Plan duration
+- Numeric ranges or counts
+
+## When not to use it
+
+- Do not use it when users need to compare many descriptive options side by side.
+- Do not use it for open-ended answers that require typing.
+
+## How to add it in the dashboard
+
+1. Open the screen in the dashboard.
+2. Add **Wheel Picker** from the **Components panel**.
+3. Select it on the **canvas**.
+4. In the **properties panel**, add items or define the range you want to show.
+5. Adjust visible items, item height, and center highlight so the selected value stands out.
+
+## Key parameters
+
+| Parameter | What it changes | When to adjust it |
+| --- | --- | --- |
+| Options or range | Defines what values users can scroll through | Use it when the answer set changes |
+| Visible items | Controls how many rows show at once | Increase it for a more open feel, reduce it for a tighter picker |
+| Item height | Controls how tall each row feels | Adjust it when the picker feels cramped or oversized |
+| Initial selected item | Sets the starting value | Use it when a sensible default improves completion |
+| Wheel height | Sets the overall component height | Use it when the picker needs a stronger presence on the screen |
+| Center highlight background | Emphasizes the current row | Use it to make the active choice obvious |
+| Center highlight border | Adds definition to the selected row area | Use it when contrast is low |
+| Default text style | Changes the look of non-selected rows | Keep it readable but quieter |
+| Selected text style | Changes the look of the active row | Use stronger contrast or weight for the selected value |
+
+## Example use cases
+
+- Ask users how many teammates they have
+- Let users choose a subscription duration
+- Capture a self-rating on a numeric scale
+
+## Best practices
+
+- Use it for ordered choices, not for complex descriptive options.
+- Make the selected row much easier to spot than the surrounding rows.
+- Start near the most common answer when a sensible default exists.
+
+## Common mistakes
+
+- Using it for long, text-heavy option labels
+- Showing too many visible rows and weakening focus
+- Setting weak contrast in the selected row
+
+## Related components
+
+- [Selection List](/components/selection-list)
+- [Text Input](/components/text-input)
+- [Text](/components/text)
+- [Stack](/components/stack)

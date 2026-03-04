@@ -1,0 +1,72 @@
+---
+title: "Loader"
+description: "Use Loader to show progress, waiting states, or a short transition between steps."
+icon: "loader"
+---
+
+## What it is
+
+**Loader** shows progress or waiting feedback on the screen.
+
+## What it's best for
+
+Use it when the user needs reassurance that something is happening, or when a short transition makes the experience feel more intentional.
+
+## When to use it
+
+- Simulate personalization while the next screen prepares
+- Show “Preparing your plan”
+- Show “Analyzing your profile”
+- Add a brief transition after a completed step
+
+## When not to use it
+
+- Do not add a loader when the next step is immediate.
+- Do not let a decorative loader replace real progress communication if the wait is meaningful.
+
+## How to add it in the dashboard
+
+1. Open the screen in the dashboard.
+2. Add **Loader** from the **Components panel**.
+3. Select it on the **canvas**.
+4. In the **properties panel**, choose the style, colors, timing, and optional progress text.
+5. Pair it with clear supporting copy so users understand what is happening.
+
+## Key parameters
+
+| Parameter | What it changes | When to adjust it |
+| --- | --- | --- |
+| Style | Switches between different loader looks | Use the style that best matches the tone of the screen |
+| Progress color | Changes the active part of the loader | Use it to match the brand and improve visibility |
+| Background color | Changes the inactive track or surrounding part | Adjust it when contrast feels too low |
+| Thickness | Changes how bold the loader appears | Increase it when the loader should feel more prominent |
+| Corner radius | Softens linear loader shapes | Use it for a more polished look |
+| Duration | Controls how long the progress animation runs | Adjust it to match the intended pacing |
+| Start delay | Adds a pause before progress begins | Use it when the screen needs a softer transition |
+| Progress text | Shows a visible progress message or percentage | Use it when users benefit from extra reassurance |
+| Progress text style | Changes the appearance of the loader text | Use it to keep the message readable and aligned with the layout |
+
+## Example use cases
+
+- A short “Building your workspace” interstitial before the final dashboard preview
+- A personalized recommendation screen that briefly shows analysis progress
+- A transition between a questionnaire and a tailored result
+
+## Best practices
+
+- Always explain what the user is waiting for.
+- Keep wait-state screens visually simple.
+- Use loaders to build confidence, not to create unnecessary delay.
+
+## Common mistakes
+
+- Showing a loader with no explanation
+- Keeping the user waiting longer than necessary
+- Over-designing the loader so it becomes the main attraction
+
+## Related components
+
+- [Text](/components/text)
+- [Lottie](/components/lottie)
+- [Button](/components/button)
+- [Page Indicator](/components/page-indicator)

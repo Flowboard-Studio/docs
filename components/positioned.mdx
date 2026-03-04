@@ -1,0 +1,73 @@
+---
+title: "Positioned"
+description: "Use Positioned to place one component precisely inside a Stack."
+icon: "location-crosshairs"
+---
+
+## What it is
+
+**Positioned** lets you place one child component at an exact spot inside a **Stack**.
+
+## What it's best for
+
+Use it when you need one visual element anchored to a corner, edge, or specific spot on the canvas.
+
+## When to use it
+
+- Add a badge on top of an image
+- Place a close action in the top corner
+- Float a small callout over a hero section
+- Add decorative accents without changing the main layout
+
+## When not to use it
+
+- Do not use it as a general-purpose layout container. Use [Stack](/components/stack) for normal layout.
+- Do not use it outside a [Stack](/components/stack).
+
+<Warning>
+  **Positioned** only works when it sits inside a **Stack**.
+</Warning>
+
+## How to add it in the dashboard
+
+1. Open the screen and select the **Stack** where the overlay should appear.
+2. In the **Components panel**, add **Positioned**.
+3. Select the positioned item on the **canvas**.
+4. In the **properties panel**, set top, right, bottom, or left spacing.
+5. Add the child component you want to show inside it.
+
+## Key parameters
+
+| Parameter | What it changes | When to adjust it |
+| --- | --- | --- |
+| Top | Pushes the child down from the top edge | Use it for top badges or close actions |
+| Right | Pushes the child in from the right edge | Use it for top-right or bottom-right overlays |
+| Bottom | Pushes the child up from the bottom edge | Use it for labels or actions near the footer |
+| Left | Pushes the child in from the left edge | Use it for anchored callouts or icons |
+| Width | Fixes the child width | Use it when the overlay needs a controlled footprint |
+| Height | Fixes the child height | Use it when the overlay should stay visually consistent |
+
+## Example use cases
+
+- A “New” badge on a product image in onboarding
+- A skip or close action pinned to the corner of a modal screen
+- A small trust label placed over a plan comparison visual
+
+## Best practices
+
+- Use it sparingly. One or two overlay elements are usually enough.
+- Keep the main message readable even with overlays in place.
+- Test placement against long text and different media crops.
+
+## Common mistakes
+
+- Using it to build the whole screen instead of only the overlay piece
+- Placing interactive items where they cover important content
+- Adding too many floating elements and reducing clarity
+
+## Related components
+
+- [Stack](/components/stack)
+- [Image](/components/image)
+- [Icon](/components/icon)
+- [Button](/components/button)

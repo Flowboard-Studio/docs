@@ -61,7 +61,66 @@
         ]
       },
       {
-        "tab": "Components library"
+        "tab": "Components library",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "components/index"
+            ]
+          },
+          {
+            "group": "Layout",
+            "pages": [
+              "components/stack",
+              "components/positioned",
+              "components/spacer",
+              "components/slider"
+            ]
+          },
+          {
+            "group": "Content",
+            "pages": [
+              "components/text",
+              "components/rich-text",
+              "components/icon"
+            ]
+          },
+          {
+            "group": "Media",
+            "pages": [
+              "components/image",
+              "components/lottie"
+            ]
+          },
+          {
+            "group": "Actions",
+            "pages": [
+              "components/button"
+            ]
+          },
+          {
+            "group": "Inputs",
+            "pages": [
+              "components/text-input",
+              "components/selection-list",
+              "components/wheel-picker"
+            ]
+          },
+          {
+            "group": "Feedback",
+            "pages": [
+              "components/loader",
+              "components/page-indicator"
+            ]
+          },
+          {
+            "group": "Data",
+            "pages": [
+              "components/radar-chart"
+            ]
+          }
+        ]
       },
       {
         "tab": "API reference",
