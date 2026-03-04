@@ -1,189 +1,307 @@
 ---
 title: "Quick start"
+description: "Create, publish, and launch your first Flowboard flow in a React Native, Expo, or Flutter app."
 icon: "stairs"
 ---
 
-Create your first Flows and show it in your app.
+Create your first flow in Flowboard Studio, connect it to your app, and launch it with the SDK.
 
-<Steps>
-  <Step title="Create an in the Studio">
-    Open the FlowBoard Studio and create a new app.
-  </Step>
-  <Step title="Create a flow and setup the default audience">
-    Add a new flow (use template to faster edition), publish it, then go the Audiences section and make sure to distribute your flow.
-  </Step>
-  <Step title="Create an API Key">
-    In order to retrieve the onboard on your app you should create an API.
+<Info>
+  This guide keeps the same implementation path most teams follow:
 
-    Open your App home page on the studio, click on config the App. Then scroll down to the API key section. 
+  - Create an app in Flowboard Studio
+  - Build and publish a flow
+  - Generate a read-only API key
+  - Install the SDK
+  - Initialize Flowboard in your app
+  - Launch the flow and verify the integration
+</Info>
 
-    <Warning>
-      We advice to only set this key with a read scope for flows. Do prefer using separate API keys to handle granular access.
-    </Warning>
-    <Frame>
-      ![Image](/images/image.png)
-    </Frame>
-  </Step>
-  <Step title="Install our SDK">
-    <CodeGroup>
+## Before you begin
 
-    ```javascript EXPO
-    //install the SDK
-    npx expo install flowboard-react
-    
-    //auto install natives depedencies
-    npx --package flowoard-react flowboard-setup --yes
-    ```
+Make sure you have:
 
-    
-    ```javascript REACT
-    //install the SDK
-    npm install flowboard-react
-    
-    //install peer dependencies
-    npx --package flowboard-react flowboard-setup --yes
-    ```
+- Access to [Flowboard Studio](https://studio.flow-board.co/)
+- An existing mobile app in **React Native**, **Expo development build**, or **Flutter**
+- Your app identifier ready:
+  - **iOS**: bundle ID
+  - **Android**: package name
+- Permission to add a new SDK dependency to your app
 
-    
-    ```dart FLUTTER
-    flutter pub add flowoard_flutter
-    ```
+<Warning>
+  Expo Go is not supported because Flowboard uses native modules. Use an Expo development build, `expo prebuild`, or EAS Build instead.
+</Warning>
 
-    </CodeGroup>
-  </Step>
-  <Step title="Initialize flowboard">
-    <CodeGroup>
+## What you will set up
 
-    ```javascript EXPO
-    
-    
-    //inside app/_layout.tsx
-    
-    import { Flowboard, FlowboardProvider } from 'flowboard-react';
-    
-    // Initialisation globale
+By the end of this guide, you will have:
+
+- One published flow in Flowboard Studio
+- One API key with read access for flows
+- Flowboard initialized in your app
+- A button or trigger that launches the flow
+
+## 1. Create an app in Flowboard Studio
+
+Open [Flowboard Studio](https://studio.flow-board.co/) and create a new app.
+
+When you create the app, add the identifiers you want Flowboard to target. This ensures the correct configuration is resolved when your app requests a flow.
+
+Recommended details to configure early:
+
+- App name
+- iOS bundle ID
+- Android package name
+- Environment or workspace conventions your team uses
+
+## 2. Create and publish your first flow
+
+Inside your app workspace in Studio:
+
+1. Create a new flow.
+2. Start from **AI**, a **template**, or a **blank flow**.
+3. Add the screens and actions you need.
+4. Review the default audience or distribution rules.
+5. Publish the flow.
+
+<Tip>
+  If you want the fastest path to a working demo, start with a template, keep the audience broad, and publish a simple 2 to 4 step flow first.
+</Tip>
+
+Before moving on, confirm:
+
+- The flow is in **published** state
+- The flow is assigned to an audience or otherwise available for launch
+- You know whether you want to launch the default flow or a specific flow ID
+
+## 3. Create an API key
+
+Your app needs an API key so the SDK can retrieve published Flowboard data.
+
+To generate it:
+
+1. Open your app in Studio.
+2. Go to the app configuration page.
+3. Scroll to the **API keys** section.
+4. Create a new key for the mobile app integration.
+
+<Warning>
+  Use the smallest scope possible. For most mobile integrations, a read-only key for flows is the correct default.
+</Warning>
+
+<Frame>
+  ![Flowboard API key screen](/images/image.png)
+</Frame>
+
+Store the key securely and use environment-based configuration for production apps.
+
+## 4. Install the SDK
+
+Choose the setup that matches your app.
+
+<CodeGroup>
+
+```bash Expo
+# Install the SDK
+npx expo install flowboard-react
+
+# Install and configure native dependencies
+npx --package flowboard-react flowboard-setup --yes
+```
+
+```bash React Native
+# Install the SDK
+npm install flowboard-react
+
+# Install and configure peer dependencies
+npx --package flowboard-react flowboard-setup --yes
+```
+
+```bash Flutter
+flutter pub add flowboard_flutter
+```
+
+</CodeGroup>
+
+<Note>
+  After installation, rebuild the app so native dependencies are compiled correctly.
+</Note>
+
+## 5. Initialize Flowboard
+
+Initialize Flowboard as early as possible during app startup, and wrap your app with the provider when using the React Native SDK.
+
+<CodeGroup>
+
+```tsx Expo
+// app/_layout.tsx
+import { Stack } from 'expo-router';
+import { Flowboard, FlowboardProvider } from 'flowboard-react';
+
+Flowboard.init({
+  apiToken: 'YOUR_API_TOKEN',
+  debug: true,
+});
+
+export default function RootLayout() {
+  return (
+    <FlowboardProvider>
+      <Stack />
+    </FlowboardProvider>
+  );
+}
+```
+
+```tsx React Native
+// index.js
+import 'react-native-get-random-values';
+
+// App.tsx
+import { useEffect } from 'react';
+import { Flowboard, FlowboardProvider } from 'flowboard-react';
+
+export default function App() {
+  useEffect(() => {
     Flowboard.init({
       apiToken: 'YOUR_API_TOKEN',
-      debug: true
+      debug: true,
     });
-    
-    export default function RootLayout() {
-      return (
-        <FlowboardProvider>
-    	{/* Put your app content here */}
-          <Stack />
-        </FlowboardProvider>
-      );
-    }
-    ```
+  }, []);
 
-    
-    ```javascript REACT
-    //inside index.js, import at the first position
-    import 'react-native-get-random-values';
-    
-    //inside App.tsx
-    import React, { useEffect } from 'react';
-    import { Flowboard, FlowboardProvider } from 'flowboard-react';
-    
-    function App() {
-      useEffect(() => {
-        Flowboard.init({
-          apiToken: 'YOUR_API_TOKEN',
-          debug: true //set to false in prod
-        });
-      }, []);
-    
-      return (
-        <FlowboardProvider>
-    	{/* Put your app content here */}
-          <AppContent />
-        </FlowboardProvider>
-      );
-    }
-    ```
+  return (
+    <FlowboardProvider>
+      <AppContent />
+    </FlowboardProvider>
+  );
+}
+```
 
-    
-    ```
-    
-    
-    ```
+```dart Flutter
+// lib/main.dart
+import 'package:flutter/widgets.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
 
-    
-    ```dart FLUTTER
-    // inside lib/main.dart
-    import 'package:flowboard_flutter/flowboard_flutter.dart';
-    
-    /* ... */
-    
-    void main() {
-    	WidgetsFlutterBinding.ensureInitialized();
-    	
-    	//It is recommended to initialize Flowboard as early as possible
-    	Flowboard.init(
-      		apiToken: 'YOUR_API_TOKEN',
-      		debug: true, //set to false in prod
-     	);
-    
-    /* ... */
-    }
-    ```
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
 
-    </CodeGroup>
-  </Step>
-  <Step title="Launch your onboarding">
-    <CodeGroup>
+  Flowboard.init(
+    apiToken: 'YOUR_API_TOKEN',
+    debug: true,
+  );
 
-    ```javascript EXPO
-    import { Flowboard } from 'flowboard-react';
-    
-    const startOnboarding = async () => {
-      await Flowboard.launchOnboarding({
-        onOnboardEnd: (formData) => {
-          console.log('Onboarding finished - Data:', formData);
-        }
-      });
-    };
-    
-    // ... inside your component
-    <Button title="Start Flow" onPress={startOnboarding} />
-    ```
+  runApp(const MyApp());
+}
+```
 
-    
-    ```javascript REACT
-    const handleLaunch = async () => {
-      try {
-        await Flowboard.launchOnboarding(
-    		onOnboardEnd: (formData) => {
-          	console.log('Onboarding finished - Data:', formData);
-        }
-    
-    	);
-      } catch (e) {
-        console.error("Erreur :", e);
-      }
-    };
-    ```
+</CodeGroup>
 
-    
-    ```javascript FLUTTER
-    ElevatedButton(
+<Tip>
+  Set `debug: false` in production.
+</Tip>
+
+## 6. Launch your flow
+
+Add a simple trigger in your app so you can confirm the integration end to end.
+
+<CodeGroup>
+
+```tsx Expo / React Native
+import { Button } from 'react-native';
+import { Flowboard } from 'flowboard-react';
+
+const startFlow = async () => {
+  try {
+    await Flowboard.launchOnboarding({
+      onOnboardEnd: (formData) => {
+        console.log('Flow finished:', formData);
+      },
+    });
+  } catch (error) {
+    console.error('Failed to launch Flowboard:', error);
+  }
+};
+
+export function LaunchFlowButton() {
+  return <Button title="Start flow" onPress={startFlow} />;
+}
+```
+
+```dart Flutter
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+class LaunchFlowButton extends StatelessWidget {
+  const LaunchFlowButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
       onPressed: () async {
         await Flowboard.launchOnboarding(
           context,
-          onOnboardEnd: (formData) =>
-              print('Onboarding finished - Data: $formData'),
+          onOnboardEnd: (formData) {
+            debugPrint('Flow finished: $formData');
+          },
         );
       },
-      child: const Text('Tester Flowboard'),
-    ),
+      child: const Text('Start flow'),
+    );
+  }
+}
+```
+
+</CodeGroup>
+
+If your setup requires launching a specific published flow, use the flow ID from Studio instead of the default launcher.
+
+## 7. Verify the integration
+
+Run the app and trigger the flow.
+
+You should verify that:
+
+- The SDK initializes without errors
+- The published flow opens in the app
+- Screen transitions work as expected
+- Completion callbacks fire at the end of the flow
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The flow does not open">
+    Check that:
+
+    - Your API token is valid
+    - The flow is published
+    - The flow is assigned to an audience that matches your device or app context
+    - Your app was rebuilt after installing the SDK
+  </Accordion>
+  <Accordion title="Expo project fails after installation">
+    Clean the generated native project and reinstall dependencies, then rebuild:
+
+    ```bash
+    rm -rf ios/build
+    rm -rf node_modules
+    npm install
+    npx expo prebuild --clean
+    npx expo run:ios
     ```
+  </Accordion>
+  <Accordion title="The app builds but Flowboard crashes or behaves incorrectly">
+    Make sure you are not testing inside Expo Go, and confirm that all native dependencies required by `flowboard-setup` were installed successfully.
+  </Accordion>
+</AccordionGroup>
 
-    </CodeGroup>
-  </Step>
-</Steps>
+## Next steps
 
-expo warning : as we sue native component you can use expo Go
+After your first successful launch, the next common steps are:
 
-please clean with : rm -rf ios/build && rm -rf node_modules && npm install && npx expo prebuild --clean\
-and relaunch **npx expo run:ios**
+- Refine the audience targeting
+- Add analytics or completion tracking
+- Launch a specific flow by ID
+- Create variants for experimentation
+- Add custom native screens where needed
+
+<Note>
+  Need help with setup or migration? Contact [greg@flow-board.co](mailto:greg@flow-board.co).
+</Note>
