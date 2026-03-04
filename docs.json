@@ -56,6 +56,14 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "Developers",
+            "pages": [
+              "retrieve-flow-data",
+              "custom-screen",
+              "custom-actions"
+            ]
           }
         ]
       },
