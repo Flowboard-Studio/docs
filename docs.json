@@ -29,9 +29,9 @@
                 "group": "Flows",
                 "icon": "code-branch",
                 "pages": [
-                  "features/flows-overview",
+                  "features/flows/overview",
                   "features/flows-translations",
-                  "features/flows-actions-transitions"
+                  "features/flows/actions-transitions"
                 ]
               },
               {
