@@ -1,4 +1,392 @@
 ---
 title: "Custom screen"
+description: "Render your own native screen while keeping Flowboard navigation and data."
 icon: "code"
 ---
+
+Use a custom screen when one step of your flow should be rendered by your app instead of by the standard Flowboard renderer.
+
+When Flowboard reaches a screen with `type: "custom"`, the SDK calls your `customScreenBuilder`.
+
+The builder receives a context object with:
+
+- `ctx.formData`: the data already collected in the flow
+- `ctx.screenData`: the JSON for the current custom screen
+- `ctx.onNext()`: move to the next screen
+- `ctx.onPrevious()`: move to the previous screen
+- `ctx.onFinish()`: end the flow
+- `ctx.onJumpTo(screenId)`: jump to another screen in the same flow
+
+## Basic flow shape
+
+In Flowboard, the screen itself stays part of the same flow. You only replace the rendering for that one step.
+
+```json
+{
+  "id": "paywall",
+  "type": "custom",
+  "properties": {
+    "title": "Upgrade to Pro",
+    "ctaLabel": "Continue"
+  }
+}
+```
+
+## Simple example
+
+Start with one `if` and one custom screen. This is the easiest way to understand the lifecycle.
+
+<CodeGroup>
+
+```tsx Expo
+import { Text, View, Button } from 'react-native';
+import { Flowboard } from 'flowboard-react';
+
+export async function startFlow() {
+  await Flowboard.launchOnboarding({
+    customScreenBuilder: (ctx) => {
+      if (ctx.screenData.id !== 'paywall') {
+        return null;
+      }
+
+      const title =
+        typeof ctx.screenData.properties?.title === 'string'
+          ? ctx.screenData.properties.title
+          : 'Upgrade';
+
+      const firstName =
+        typeof ctx.formData.fullname === 'string' ? ctx.formData.fullname : '';
+
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
+          <Text style={{ fontSize: 28, fontWeight: '700' }}>{title}</Text>
+          <Text style={{ marginTop: 12 }}>
+            {firstName ? `Welcome back, ${firstName}.` : 'Welcome.'}
+          </Text>
+          <Button title="Continue" onPress={ctx.onNext} />
+        </View>
+      );
+    },
+  });
+}
+```
+
+```tsx React Native
+import { Text, View, Button } from 'react-native';
+import { Flowboard } from 'flowboard-react';
+
+export async function startFlow() {
+  await Flowboard.launchOnboarding({
+    customScreenBuilder: (ctx) => {
+      if (ctx.screenData.id !== 'paywall') {
+        return null;
+      }
+
+      const title =
+        typeof ctx.screenData.properties?.title === 'string'
+          ? ctx.screenData.properties.title
+          : 'Upgrade';
+
+      const firstName =
+        typeof ctx.formData.fullname === 'string' ? ctx.formData.fullname : '';
+
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
+          <Text style={{ fontSize: 28, fontWeight: '700' }}>{title}</Text>
+          <Text style={{ marginTop: 12 }}>
+            {firstName ? `Welcome back, ${firstName}.` : 'Welcome.'}
+          </Text>
+          <Button title="Continue" onPress={ctx.onNext} />
+        </View>
+      );
+    },
+  });
+}
+```
+
+```dart Flutter
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+Future<void> startFlow(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    customScreenBuilder: (ctx) {
+      if (ctx.screenData['id'] != 'paywall') {
+        return const SizedBox.shrink();
+      }
+
+      final properties =
+          ctx.screenData['properties'] as Map<String, dynamic>? ?? {};
+      final title = properties['title'] as String? ?? 'Upgrade';
+      final firstName = ctx.formData['fullname'] as String? ?? '';
+
+      return Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  firstName.isNotEmpty
+                      ? 'Welcome back, $firstName.'
+                      : 'Welcome.',
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: ctx.onNext,
+                  child: const Text('Continue'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+```
+
+</CodeGroup>
+
+<Tip>
+  Use the simple inline approach first when you are prototyping. Move to a router only when you have more than one custom screen or your screen logic starts growing.
+</Tip>
+
+## Recommended production setup
+
+For production, keep your `customScreenBuilder` small and route by screen ID in one place.
+
+This gives you a single entry point, keeps launch code clean, and makes each custom screen easier to test.
+
+Recommended structure:
+
+- Put the router in one dedicated file
+- Use a `switch` on `screenId`
+- Load each custom screen from its own file
+- Keep a fallback screen for unknown IDs
+
+<CodeGroup>
+
+```tsx Expo
+// src/flowboard/customScreens.tsx
+import type { FlowboardContext } from 'flowboard-react';
+import { FlowboardPaywallScreen } from './screens/FlowboardPaywallScreen';
+import { FlowboardProfileSummaryScreen } from './screens/FlowboardProfileSummaryScreen';
+import { UnknownFlowboardScreen } from './screens/UnknownFlowboardScreen';
+
+export function buildFlowboardCustomScreen(ctx: FlowboardContext) {
+  const screenId = String(ctx.screenData.id ?? '');
+
+  switch (screenId) {
+    case 'paywall':
+      return <FlowboardPaywallScreen ctx={ctx} />;
+    case 'profile_summary':
+      return <FlowboardProfileSummaryScreen ctx={ctx} />;
+    default:
+      return <UnknownFlowboardScreen ctx={ctx} />;
+  }
+}
+
+// src/flowboard/screens/FlowboardPaywallScreen.tsx
+import { Button, Text, View } from 'react-native';
+import type { FlowboardContext } from 'flowboard-react';
+
+export function FlowboardPaywallScreen({
+  ctx,
+}: {
+  ctx: FlowboardContext;
+}) {
+  const properties =
+    (ctx.screenData.properties as Record<string, unknown> | undefined) ?? {};
+  const title =
+    typeof properties.title === 'string' ? properties.title : 'Upgrade to Pro';
+  const ctaLabel =
+    typeof properties.ctaLabel === 'string' ? properties.ctaLabel : 'Continue';
+  const plan =
+    typeof ctx.formData.plan === 'string' ? ctx.formData.plan : 'free';
+
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
+      <Text style={{ fontSize: 28, fontWeight: '700' }}>{title}</Text>
+      <Text style={{ marginTop: 12 }}>Current plan: {plan}</Text>
+      <Button title={ctaLabel} onPress={ctx.onNext} />
+    </View>
+  );
+}
+
+// src/features/onboarding/launchOnboarding.ts
+import { Flowboard } from 'flowboard-react';
+import { buildFlowboardCustomScreen } from '../../flowboard/customScreens';
+
+export async function launchOnboarding() {
+  await Flowboard.launchOnboarding({
+    customScreenBuilder: buildFlowboardCustomScreen,
+  });
+}
+```
+
+```tsx React Native
+// src/flowboard/customScreens.tsx
+import type { FlowboardContext } from 'flowboard-react';
+import { FlowboardPaywallScreen } from './screens/FlowboardPaywallScreen';
+import { FlowboardProfileSummaryScreen } from './screens/FlowboardProfileSummaryScreen';
+import { UnknownFlowboardScreen } from './screens/UnknownFlowboardScreen';
+
+export function buildFlowboardCustomScreen(ctx: FlowboardContext) {
+  const screenId = String(ctx.screenData.id ?? '');
+
+  switch (screenId) {
+    case 'paywall':
+      return <FlowboardPaywallScreen ctx={ctx} />;
+    case 'profile_summary':
+      return <FlowboardProfileSummaryScreen ctx={ctx} />;
+    default:
+      return <UnknownFlowboardScreen ctx={ctx} />;
+  }
+}
+
+// src/flowboard/screens/FlowboardPaywallScreen.tsx
+import { Button, Text, View } from 'react-native';
+import type { FlowboardContext } from 'flowboard-react';
+
+export function FlowboardPaywallScreen({
+  ctx,
+}: {
+  ctx: FlowboardContext;
+}) {
+  const properties =
+    (ctx.screenData.properties as Record<string, unknown> | undefined) ?? {};
+  const title =
+    typeof properties.title === 'string' ? properties.title : 'Upgrade to Pro';
+  const ctaLabel =
+    typeof properties.ctaLabel === 'string' ? properties.ctaLabel : 'Continue';
+  const plan =
+    typeof ctx.formData.plan === 'string' ? ctx.formData.plan : 'free';
+
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
+      <Text style={{ fontSize: 28, fontWeight: '700' }}>{title}</Text>
+      <Text style={{ marginTop: 12 }}>Current plan: {plan}</Text>
+      <Button title={ctaLabel} onPress={ctx.onNext} />
+    </View>
+  );
+}
+
+// src/features/onboarding/launchOnboarding.ts
+import { Flowboard } from 'flowboard-react';
+import { buildFlowboardCustomScreen } from '../../flowboard/customScreens';
+
+export async function launchOnboarding() {
+  await Flowboard.launchOnboarding({
+    customScreenBuilder: buildFlowboardCustomScreen,
+  });
+}
+```
+
+```dart Flutter
+// lib/flowboard/custom_screens.dart
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+import 'screens/flowboard_paywall_screen.dart';
+import 'screens/flowboard_profile_summary_screen.dart';
+import 'screens/unknown_flowboard_screen.dart';
+
+Widget buildFlowboardCustomScreen(FlowboardContext ctx) {
+  final screenId = ctx.screenData['id'] as String? ?? '';
+
+  switch (screenId) {
+    case 'paywall':
+      return FlowboardPaywallScreen(ctx: ctx);
+    case 'profile_summary':
+      return FlowboardProfileSummaryScreen(ctx: ctx);
+    default:
+      return UnknownFlowboardScreen(ctx: ctx);
+  }
+}
+
+// lib/flowboard/screens/flowboard_paywall_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+class FlowboardPaywallScreen extends StatelessWidget {
+  final FlowboardContext ctx;
+
+  const FlowboardPaywallScreen({
+    super.key,
+    required this.ctx,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final properties =
+        ctx.screenData['properties'] as Map<String, dynamic>? ?? {};
+    final title = properties['title'] as String? ?? 'Upgrade to Pro';
+    final ctaLabel = properties['ctaLabel'] as String? ?? 'Continue';
+    final plan = ctx.formData['plan'] as String? ?? 'free';
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text('Current plan: $plan'),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: ctx.onNext,
+                child: Text(ctaLabel),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// lib/features/onboarding/launch_onboarding.dart
+Future<void> launchOnboarding(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    customScreenBuilder: buildFlowboardCustomScreen,
+  );
+}
+```
+
+</CodeGroup>
+
+<Note>
+  Adjust the example file paths to match your app structure. The important part is the separation between the router and the screen components.
+</Note>
+
+## Practical guidance
+
+Use custom screens for cases like:
+
+- A native paywall tied to your purchase SDK
+- A login or signup screen backed by your own auth flow
+- A profile summary or confirmation step based on earlier answers
+- A screen that depends on native features not exposed by standard Flowboard components
+
+Keep business logic inside your screen component, and keep screen routing inside the shared router.

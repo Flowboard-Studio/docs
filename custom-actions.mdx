@@ -1,5 +1,376 @@
 ---
 title: "Custom actions"
+description: "Handle app-specific actions from Flowboard with a clear routing layer."
 icon: "brackets-curly"
 ---
 
+Flowboard already handles the common actions used in most flows:
+
+- `next`
+- `previous`
+- `finish`
+- `deeplink`
+- `weblink`
+- `rate_app`
+- `request_permission`
+- `jump_to`
+
+Use a custom action when one step needs to call your own app logic, such as opening a checkout flow, saving data to your backend, or triggering a native feature.
+
+When Flowboard sees an action it does not handle internally, it calls `customActionBuilder(action, ctx, data)`.
+
+## What the handler receives
+
+Your handler receives:
+
+- `action`: the action name from the flow, such as `open_checkout`
+- `ctx`: the same Flowboard context used by custom screens
+- `data`: a merged payload containing the component `properties` and any `actionData`
+
+That means `actionData` is the right place for business inputs, while component properties can still be useful for labels or presentation defaults.
+
+## Basic flow shape
+
+```json
+{
+  "type": "button",
+  "action": "open_checkout",
+  "actionData": {
+    "plan": "pro",
+    "successScreenId": "signup"
+  },
+  "properties": {
+    "label": "Start trial"
+  }
+}
+```
+
+## Simple example
+
+Start with one action name and one small handler.
+
+<CodeGroup>
+
+```tsx Expo
+import { Alert } from 'react-native';
+import { Flowboard } from 'flowboard-react';
+
+export async function startFlow() {
+  await Flowboard.launchOnboarding({
+    customActionBuilder: (action, ctx, data) => {
+      if (action !== 'open_checkout') {
+        return;
+      }
+
+      const plan = typeof data?.plan === 'string' ? data.plan : 'free';
+
+      Alert.alert('Checkout', `Open checkout for ${plan}`);
+      ctx.onNext();
+    },
+  });
+}
+```
+
+```tsx React Native
+import { Alert } from 'react-native';
+import { Flowboard } from 'flowboard-react';
+
+export async function startFlow() {
+  await Flowboard.launchOnboarding({
+    customActionBuilder: (action, ctx, data) => {
+      if (action !== 'open_checkout') {
+        return;
+      }
+
+      const plan = typeof data?.plan === 'string' ? data.plan : 'free';
+
+      Alert.alert('Checkout', `Open checkout for ${plan}`);
+      ctx.onNext();
+    },
+  });
+}
+```
+
+```dart Flutter
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+Future<void> startFlow(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    customActionBuilder: (action, ctx, data) {
+      if (action != 'open_checkout') {
+        return;
+      }
+
+      final plan = data?['plan'] as String? ?? 'free';
+
+      ScaffoldMessenger.of(ctx.context).showSnackBar(
+        SnackBar(content: Text('Open checkout for $plan')),
+      );
+      ctx.onNext();
+    },
+  );
+}
+```
+
+</CodeGroup>
+
+<Tip>
+  Keep the custom action name stable and explicit, such as `open_checkout`, `create_account`, or `apply_referral_code`. Avoid overloaded names like `submit`.
+</Tip>
+
+## Recommended production setup
+
+For production, use one central router with a `switch` and move each action into its own helper.
+
+This is the cleanest setup when a flow can trigger multiple business actions.
+
+Recommended structure:
+
+- A thin `customActionBuilder`
+- One `routeFlowboardAction` function with a `switch`
+- Small helper functions that parse `data`, call your services, and decide whether to use `ctx.onNext()`, `ctx.onFinish()`, or `ctx.onJumpTo()`
+
+<CodeGroup>
+
+```tsx Expo
+// src/flowboard/customActions.ts
+import type { FlowboardContext } from 'flowboard-react';
+
+type ActionPayload = Record<string, unknown> | undefined;
+
+function readString(data: ActionPayload, key: string): string {
+  const value = data?.[key];
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+async function handleOpenCheckout(
+  ctx: FlowboardContext,
+  data: ActionPayload
+) {
+  const plan = readString(data, 'plan') || 'free';
+  const successScreenId = readString(data, 'successScreenId');
+
+  await billing.presentCheckout({
+    plan,
+    customerEmail:
+      typeof ctx.formData.email === 'string' ? ctx.formData.email : undefined,
+  });
+
+  if (successScreenId) {
+    ctx.onJumpTo(successScreenId);
+    return;
+  }
+
+  ctx.onNext();
+}
+
+async function handleCreateAccount(
+  ctx: FlowboardContext,
+  data: ActionPayload
+) {
+  await api.post('/signup', {
+    email: ctx.formData.email,
+    password: ctx.formData.password,
+    referralCode: readString(data, 'referralCode') || undefined,
+  });
+
+  ctx.onNext();
+}
+
+export async function routeFlowboardAction(
+  action: string,
+  ctx: FlowboardContext,
+  data: ActionPayload
+) {
+  switch (action) {
+    case 'open_checkout':
+      await handleOpenCheckout(ctx, data);
+      return;
+    case 'create_account':
+      await handleCreateAccount(ctx, data);
+      return;
+    default:
+      console.warn(`Unhandled Flowboard action: ${action}`);
+  }
+}
+
+// src/features/onboarding/launchOnboarding.ts
+import { Flowboard } from 'flowboard-react';
+import { routeFlowboardAction } from '../../flowboard/customActions';
+
+export async function launchOnboarding() {
+  await Flowboard.launchOnboarding({
+    customActionBuilder: (action, ctx, data) => {
+      void routeFlowboardAction(action, ctx, data);
+    },
+  });
+}
+```
+
+```tsx React Native
+// src/flowboard/customActions.ts
+import type { FlowboardContext } from 'flowboard-react';
+
+type ActionPayload = Record<string, unknown> | undefined;
+
+function readString(data: ActionPayload, key: string): string {
+  const value = data?.[key];
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+async function handleOpenCheckout(
+  ctx: FlowboardContext,
+  data: ActionPayload
+) {
+  const plan = readString(data, 'plan') || 'free';
+  const successScreenId = readString(data, 'successScreenId');
+
+  await billing.presentCheckout({
+    plan,
+    customerEmail:
+      typeof ctx.formData.email === 'string' ? ctx.formData.email : undefined,
+  });
+
+  if (successScreenId) {
+    ctx.onJumpTo(successScreenId);
+    return;
+  }
+
+  ctx.onNext();
+}
+
+async function handleCreateAccount(
+  ctx: FlowboardContext,
+  data: ActionPayload
+) {
+  await api.post('/signup', {
+    email: ctx.formData.email,
+    password: ctx.formData.password,
+    referralCode: readString(data, 'referralCode') || undefined,
+  });
+
+  ctx.onNext();
+}
+
+export async function routeFlowboardAction(
+  action: string,
+  ctx: FlowboardContext,
+  data: ActionPayload
+) {
+  switch (action) {
+    case 'open_checkout':
+      await handleOpenCheckout(ctx, data);
+      return;
+    case 'create_account':
+      await handleCreateAccount(ctx, data);
+      return;
+    default:
+      console.warn(`Unhandled Flowboard action: ${action}`);
+  }
+}
+
+// src/features/onboarding/launchOnboarding.ts
+import { Flowboard } from 'flowboard-react';
+import { routeFlowboardAction } from '../../flowboard/customActions';
+
+export async function launchOnboarding() {
+  await Flowboard.launchOnboarding({
+    customActionBuilder: (action, ctx, data) => {
+      void routeFlowboardAction(action, ctx, data);
+    },
+  });
+}
+```
+
+```dart Flutter
+// lib/flowboard/custom_actions.dart
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+String readString(Map<String, dynamic>? data, String key) {
+  final value = data?[key];
+  return value is String ? value.trim() : '';
+}
+
+Future<void> handleOpenCheckout(
+  FlowboardContext ctx,
+  Map<String, dynamic>? data,
+) async {
+  final planValue = readString(data, 'plan');
+  final plan = planValue.isEmpty ? 'free' : planValue;
+  final successScreenId = readString(data, 'successScreenId');
+
+  await billing.presentCheckout(
+    plan: plan,
+    customerEmail: ctx.formData['email'] as String?,
+  );
+
+  if (successScreenId.isNotEmpty) {
+    ctx.onJumpTo(successScreenId);
+    return;
+  }
+
+  ctx.onNext();
+}
+
+Future<void> handleCreateAccount(
+  FlowboardContext ctx,
+  Map<String, dynamic>? data,
+) async {
+  await api.post('/signup', {
+    'email': ctx.formData['email'],
+    'password': ctx.formData['password'],
+    'referralCode': readString(data, 'referralCode'),
+  });
+
+  ctx.onNext();
+}
+
+Future<void> routeFlowboardAction(
+  String action,
+  FlowboardContext ctx,
+  Map<String, dynamic>? data,
+) async {
+  switch (action) {
+    case 'open_checkout':
+      await handleOpenCheckout(ctx, data);
+      return;
+    case 'create_account':
+      await handleCreateAccount(ctx, data);
+      return;
+    default:
+      debugPrint('Unhandled Flowboard action: $action');
+  }
+}
+
+// lib/features/onboarding/launch_onboarding.dart
+Future<void> launchOnboarding(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    customActionBuilder: (action, ctx, data) {
+      unawaited(routeFlowboardAction(action, ctx, data));
+    },
+  );
+}
+```
+
+</CodeGroup>
+
+<Note>
+  Replace `billing` and `api` with your own services. The important contract is the action name, the parsed payload, and the Flowboard navigation callback you call after your business logic completes.
+</Note>
+
+## Practical guidance
+
+Use custom actions when Flowboard should trigger:
+
+- A purchase flow from your billing SDK
+- Account creation or profile updates in your backend
+- Native features that are specific to your app
+- Branching decisions that depend on both `ctx.formData` and action-specific payload
+
+Use `actionData` for business parameters and `ctx.formData` for answers already collected in the flow.

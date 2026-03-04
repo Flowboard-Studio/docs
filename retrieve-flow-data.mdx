@@ -1,5 +1,371 @@
 ---
-title: "Retrieve Flow data"
+title: "Retrieve flow data"
+description: "Use Flowboard form data during the flow and when the flow finishes."
 icon: "database"
 ---
 
+Flowboard returns collected user input as `formData`.
+
+Each key in `formData` matches the `id` of an input component in your flow. If your flow has inputs with IDs like `email`, `plan`, and `accept_terms`, Flowboard returns data in this shape:
+
+```json
+{
+  "email": "ada@example.com",
+  "plan": "pro",
+  "accept_terms": true
+}
+```
+
+You can read that data in three places:
+
+| API | When to use it | What you receive |
+| --- | --- | --- |
+| `onOnboardEnd(formData)` | When the flow is completed | The final collected data |
+| `onStepChange(pageId, pageStep, formData)` | When you want progress-aware analytics or autosave | The current data snapshot at that step |
+| `ctx.formData` | Inside a custom screen or custom action | The latest data collected before that screen or action |
+
+## Simple example
+
+Start with `onOnboardEnd` when you only need the final values.
+
+<CodeGroup>
+
+```tsx Expo
+import { Flowboard } from 'flowboard-react';
+
+export async function startFlow() {
+  await Flowboard.launchOnboarding({
+    onOnboardEnd: (formData) => {
+      const email =
+        typeof formData.email === 'string' ? formData.email.trim() : '';
+      const selectedPlan =
+        typeof formData.plan === 'string' ? formData.plan : 'free';
+
+      console.log('Flow completed', {
+        email,
+        selectedPlan,
+      });
+    },
+  });
+}
+```
+
+```tsx React Native
+import { Flowboard } from 'flowboard-react';
+
+export async function startFlow() {
+  await Flowboard.launchOnboarding({
+    onOnboardEnd: (formData) => {
+      const email =
+        typeof formData.email === 'string' ? formData.email.trim() : '';
+      const selectedPlan =
+        typeof formData.plan === 'string' ? formData.plan : 'free';
+
+      console.log('Flow completed', {
+        email,
+        selectedPlan,
+      });
+    },
+  });
+}
+```
+
+```dart Flutter
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+Future<void> startFlow(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    onOnboardEnd: (formData) {
+      final email = (formData['email'] as String? ?? '').trim();
+      final selectedPlan = formData['plan'] as String? ?? 'free';
+
+      debugPrint('Flow completed: email=$email, plan=$selectedPlan');
+    },
+  );
+}
+```
+
+</CodeGroup>
+
+<Tip>
+  Keep your Flowboard input IDs stable. Those IDs become your `formData` keys, so changing them changes the data contract in your app.
+</Tip>
+
+## Use data before the flow ends
+
+You do not have to wait until completion.
+
+Use `onStepChange` for analytics, progress-aware UI, or autosave, and use `ctx.formData` inside custom screens when a screen needs values from earlier steps.
+
+<CodeGroup>
+
+```tsx Expo / React Native
+await Flowboard.launchOnboarding({
+  onStepChange: (pageId, pageStep, formData) => {
+    analytics.track('flow_step_viewed', {
+      pageId,
+      pageStep,
+      selectedPlan:
+        typeof formData.plan === 'string' ? formData.plan : undefined,
+    });
+  },
+  customScreenBuilder: (ctx) => {
+    if (ctx.screenData.id !== 'profile_summary') {
+      return null;
+    }
+
+    return (
+      <ProfileSummaryCard
+        name={typeof ctx.formData.fullname === 'string' ? ctx.formData.fullname : ''}
+        email={typeof ctx.formData.email === 'string' ? ctx.formData.email : ''}
+        onContinue={ctx.onNext}
+      />
+    );
+  },
+});
+```
+
+```dart Flutter
+await Flowboard.launchOnboarding(
+  context,
+  onStepChange: (pageId, pageStep, formData) {
+    analytics.track('flow_step_viewed', {
+      'pageId': pageId,
+      'pageStep': pageStep,
+      'selectedPlan': formData['plan'],
+    });
+  },
+  customScreenBuilder: (ctx) {
+    if (ctx.screenData['id'] != 'profile_summary') {
+      return const SizedBox.shrink();
+    }
+
+    return ProfileSummaryCard(
+      name: ctx.formData['fullname'] as String? ?? '',
+      email: ctx.formData['email'] as String? ?? '',
+      onContinue: ctx.onNext,
+    );
+  },
+);
+```
+
+</CodeGroup>
+
+## Recommended production setup
+
+In production, do not pass raw `formData` directly to the rest of your app.
+
+Map it into a small, typed payload first. This gives you one place to validate keys, apply defaults, and keep your backend contract stable even if the flow grows.
+
+<CodeGroup>
+
+```tsx Expo
+// src/flowboard/flowResult.ts
+type FlowboardSignupPayload = {
+  email: string;
+  fullName: string;
+  plan: 'free' | 'pro' | 'team';
+  acceptedTerms: boolean;
+};
+
+function readString(
+  formData: Record<string, unknown>,
+  key: string
+): string {
+  const value = formData[key];
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function readPlan(
+  formData: Record<string, unknown>
+): FlowboardSignupPayload['plan'] {
+  const value = formData.plan;
+  return value === 'pro' || value === 'team' ? value : 'free';
+}
+
+export function buildFlowboardSignupPayload(
+  formData: Record<string, unknown>
+): FlowboardSignupPayload {
+  return {
+    email: readString(formData, 'email'),
+    fullName: readString(formData, 'fullname'),
+    plan: readPlan(formData),
+    acceptedTerms: Boolean(formData.accept_terms),
+  };
+}
+
+// src/features/onboarding/launchSignupFlow.ts
+import { Flowboard } from 'flowboard-react';
+import { buildFlowboardSignupPayload } from '../../flowboard/flowResult';
+
+async function submitOnboardingResult(payload: FlowboardSignupPayload) {
+  await api.post('/onboarding/complete', payload);
+}
+
+export async function launchSignupFlow() {
+  await Flowboard.launchOnboarding({
+    onStepChange: (pageId, pageStep, formData) => {
+      analytics.track('flow_step_viewed', {
+        pageId,
+        pageStep,
+        plan: buildFlowboardSignupPayload(formData).plan,
+      });
+    },
+    onOnboardEnd: (formData) => {
+      const payload = buildFlowboardSignupPayload(formData);
+      void submitOnboardingResult(payload);
+    },
+  });
+}
+```
+
+```tsx React Native
+// src/flowboard/flowResult.ts
+type FlowboardSignupPayload = {
+  email: string;
+  fullName: string;
+  plan: 'free' | 'pro' | 'team';
+  acceptedTerms: boolean;
+};
+
+function readString(
+  formData: Record<string, unknown>,
+  key: string
+): string {
+  const value = formData[key];
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function readPlan(
+  formData: Record<string, unknown>
+): FlowboardSignupPayload['plan'] {
+  const value = formData.plan;
+  return value === 'pro' || value === 'team' ? value : 'free';
+}
+
+export function buildFlowboardSignupPayload(
+  formData: Record<string, unknown>
+): FlowboardSignupPayload {
+  return {
+    email: readString(formData, 'email'),
+    fullName: readString(formData, 'fullname'),
+    plan: readPlan(formData),
+    acceptedTerms: Boolean(formData.accept_terms),
+  };
+}
+
+// src/features/onboarding/launchSignupFlow.ts
+import { Flowboard } from 'flowboard-react';
+import { buildFlowboardSignupPayload } from '../../flowboard/flowResult';
+
+async function submitOnboardingResult(payload: FlowboardSignupPayload) {
+  await api.post('/onboarding/complete', payload);
+}
+
+export async function launchSignupFlow() {
+  await Flowboard.launchOnboarding({
+    onStepChange: (pageId, pageStep, formData) => {
+      analytics.track('flow_step_viewed', {
+        pageId,
+        pageStep,
+        plan: buildFlowboardSignupPayload(formData).plan,
+      });
+    },
+    onOnboardEnd: (formData) => {
+      const payload = buildFlowboardSignupPayload(formData);
+      void submitOnboardingResult(payload);
+    },
+  });
+}
+```
+
+```dart Flutter
+// lib/flowboard/flow_result.dart
+class FlowboardSignupPayload {
+  final String email;
+  final String fullName;
+  final String plan;
+  final bool acceptedTerms;
+
+  const FlowboardSignupPayload({
+    required this.email,
+    required this.fullName,
+    required this.plan,
+    required this.acceptedTerms,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'fullName': fullName,
+      'plan': plan,
+      'acceptedTerms': acceptedTerms,
+    };
+  }
+}
+
+String _readString(Map<String, dynamic> formData, String key) {
+  final value = formData[key];
+  return value is String ? value.trim() : '';
+}
+
+String _readPlan(Map<String, dynamic> formData) {
+  final value = formData['plan'];
+  if (value == 'pro' || value == 'team') {
+    return value as String;
+  }
+  return 'free';
+}
+
+FlowboardSignupPayload buildFlowboardSignupPayload(
+  Map<String, dynamic> formData,
+) {
+  return FlowboardSignupPayload(
+    email: _readString(formData, 'email'),
+    fullName: _readString(formData, 'fullname'),
+    plan: _readPlan(formData),
+    acceptedTerms: formData['accept_terms'] == true,
+  );
+}
+
+// lib/features/onboarding/launch_signup_flow.dart
+Future<void> submitOnboardingResult(FlowboardSignupPayload payload) async {
+  await api.post('/onboarding/complete', payload.toJson());
+}
+
+Future<void> launchSignupFlow(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    onStepChange: (pageId, pageStep, formData) {
+      final payload = buildFlowboardSignupPayload(formData);
+
+      analytics.track('flow_step_viewed', {
+        'pageId': pageId,
+        'pageStep': pageStep,
+        'plan': payload.plan,
+      });
+    },
+    onOnboardEnd: (formData) {
+      final payload = buildFlowboardSignupPayload(formData);
+      submitOnboardingResult(payload);
+    },
+  );
+}
+```
+
+</CodeGroup>
+
+<Note>
+  Replace `analytics`, `api`, and any helper components in these examples with the services and UI primitives used in your app.
+</Note>
+
+## Summary
+
+Use this rule:
+
+- Read final data in `onOnboardEnd`
+- Read progress snapshots in `onStepChange`
+- Read live values in `ctx.formData`
+- Normalize the payload before sending it to your backend
