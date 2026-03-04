@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "Flowboard",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#3A6EFF",
+    "light": "#3A6EFF",
+    "dark": "#304BB2"
   },
   "favicon": "/favicon.svg",
   "navigation": {
