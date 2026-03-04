@@ -22,23 +22,29 @@ Every interactive element can trigger an action. In most flows, that action is c
 ## Common action types
 
 <AccordionGroup>
-  <Accordion title="Next">
+  <Accordion icon="arrow-right" title="Next">
     Sends the user to the next screen in the current order. Use this for most linear onboarding journeys.
   </Accordion>
-  <Accordion title="Previous">
+  <Accordion icon="arrow-left" title="Previous">
     Returns the user to the previous screen. Use this only when going back is helpful and low-risk.
   </Accordion>
-  <Accordion title="Jump to">
+  <Accordion icon="arrow-turn-down-right" title="Jump to">
     Sends the user to a specific screen. Use this for branching journeys, skip logic, or segmented paths.
   </Accordion>
-  <Accordion title="Finish">
+  <Accordion icon="circle-check" title="Finish">
     Ends the flow. Use this on the last step or when a user has completed the key outcome.
   </Accordion>
-  <Accordion title="Deep link or web URL">
-    Opens another destination, such as a page in your app or an external website.
+  <Accordion icon="bolt-lightning" title="Deep link">
+    Opens  a given page in your app.
   </Accordion>
-  <Accordion title="Request permission">
+  <Accordion icon="shield" title="Request permission">
     Triggers a permission request, such as notifications, camera, location, or photo access.
+  </Accordion>
+  <Accordion icon="star" title="Rate">
+    Native ask for rating the app and go next.
+  </Accordion>
+  <Accordion icon="globe" title="Web URL">
+    Opens external website.
   </Accordion>
 </AccordionGroup>
 
