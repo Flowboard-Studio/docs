@@ -96,7 +96,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:greg@flow-board.co"
       }
     ],
     "primary": {
@@ -123,5 +123,6 @@
       "github": "https://github.com/mintlify",
       "linkedin": "https://linkedin.com/company/mintlify"
     }
-  }
+  },
+  "description": "Your onboarding is your revenue. Iterate on it. "
 }
