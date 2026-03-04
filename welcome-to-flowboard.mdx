@@ -1,6 +1,7 @@
 ---
-title: 'Welcome to Flowboard'
-description: 'Design, publish, and launch mobile onboarding flows with Flowboard Studio.'
+title: "Welcome to Flowboard"
+description: "Design, publish, and launch mobile onboarding flows with Flowboard Studio."
+icon: "door-open"
 ---
 
 ## Quick start
@@ -10,10 +11,10 @@ Flowboard helps product, growth, and engineering teams ship in-app onboarding wi
 Create an app in Flowboard Studio, generate a first flow with AI or a template, edit screens visually, publish the runtime JSON, and launch the flow from your React Native or Flutter app.
 
 <CardGroup cols={2}>
-  <Card title="Open Flowboard Studio" icon="sparkles" href="https://studio.flow-board.co/">
+  <Card icon="sparkles" href="https://studio.flow-board.co/" title="Open Flowboard Studio">
     Create your app, build your first flow, and start iterating.
   </Card>
-  <Card title="Contact support" icon="envelope" href="mailto:greg@flow-board.co">
+  <Card icon="envelope" href="mailto:greg@flow-board.co" title="Contact support">
     Reach out if you need help with setup, migration, or pricing.
   </Card>
 </CardGroup>
@@ -21,10 +22,10 @@ Create an app in Flowboard Studio, generate a first flow with AI or a template, 
 <Info>
   Common Flowboard goals:
 
-  * **Iterate onboarding faster**
-  * **A/B test onboarding**
-  * **Generate onboarding with AI**
-  * **Analyze drop-off and activation**
+  - **Iterate onboarding faster**
+  - **A/B test onboarding**
+  - **Generate onboarding with AI**
+  - **Analyze drop-off and activation**
 </Info>
 
 ## The Flowboard platform overview
@@ -35,38 +36,32 @@ Create an app in Flowboard Studio, generate a first flow with AI or a template, 
       <Step title="Step 1">
         Open [Flowboard Studio](https://studio.flow-board.co/) and create an app for **iOS**, **Android**, or **both**.
       </Step>
-
       <Step title="Step 2">
         Add the app identifier you want to target, then choose how you want to start: **AI generation**, a **template**, or a **blank flow**.
       </Step>
     </Steps>
   </Accordion>
-
   <Accordion title="Choose how to start">
     Flowboard supports several starting points:
 
-    * **Generate with AI** when you want a first draft from a product prompt.
-    * **Use a template** for common flows like mobile onboarding, welcome modal, paywall, upsell, or NPS.
-    * **Build from scratch** when you already know the exact screen sequence you want.
+    - **Generate with AI** when you want a first draft from a product prompt.
+    - **Use a template** for common flows like mobile onboarding, welcome modal, paywall, upsell, or NPS.
+    - **Build from scratch** when you already know the exact screen sequence you want.
   </Accordion>
-
   <Accordion title="Edit flows visually">
     In Flowboard Studio you can:
 
-    * **Build builder screens** with Flowboard's JSON-driven UI blocks.
-    * **Mix in custom screens** that render native code in your app.
-    * **Tune copy, layout, backgrounds, progress bars, and actions** without touching the app release pipeline.
-    * **Preview draft and published states** before shipping changes.
+    - **Build builder screens** with Flowboard's JSON-driven UI blocks.
+    - **Mix in custom screens** that render native code in your app.
+    - **Tune copy, layout, backgrounds, progress bars, and actions** without touching the app release pipeline.
+    - **Preview draft and published states** before shipping changes.
   </Accordion>
-
   <Accordion title="Publish and launch">
     Every flow can move from **draft** to **published**. Published flows are exported as runtime JSON and can be launched in your app by **flow ID** through the Flowboard SDK.
   </Accordion>
-
   <Accordion title="Target audiences and experiments">
     Flowboard lets you define **audiences** with rules like app version, country, locale, and operating system, then assign **flow variants** and traffic weights for rollout and A/B testing.
   </Accordion>
-
   <Accordion title="Measure onboarding performance">
     Flow metadata such as `flow_id`, `variant_id`, `audience_id`, `bucket`, and `experiment_id` can travel with the resolved flow so you can connect launches, completion, and experiments back to your analytics stack.
   </Accordion>
@@ -81,24 +76,21 @@ Create an app in Flowboard Studio, generate a first flow with AI or a template, 
     <Info>
       Example prompt:
 
-      *"Create a 4-step onboarding for a subscription meditation app. Ask about the user's goal, highlight streak tracking, add a paywall, and finish with notification opt-in."*
+      _"Create a 4-step onboarding for a subscription meditation app. Ask about the user's goal, highlight streak tracking, add a paywall, and finish with notification opt-in."_
     </Info>
   </Accordion>
-
   <Accordion title="Start from a template">
     Templates are useful when you need speed and structure. Current first-flow options in Flowboard include:
 
-    * **3-step welcome onboarding**
-    * **Feature discovery tooltip tour**
-    * **Paywall gate**
-    * **Upsell**
-    * **NPS**
+    - **3-step welcome onboarding**
+    - **Feature discovery tooltip tour**
+    - **Paywall gate**
+    - **Upsell**
+    - **NPS**
   </Accordion>
-
   <Accordion title="Build from scratch">
     If you already know the exact journey, create screens one by one, define the actions between them, preview the flow, and publish once the draft matches the behavior you want.
   </Accordion>
-
   <Accordion title="Set platform details early">
     Flowboard uses your app identifiers to resolve and launch flows correctly. For iOS this is typically the **bundle ID**. For Android this is the **package name**.
   </Accordion>
@@ -110,15 +102,12 @@ Create an app in Flowboard Studio, generate a first flow with AI or a template, 
   <Accordion title="Work in draft and published modes">
     Draft mode is where you edit safely. Published mode is what your app consumes. This makes it easy to keep iterating without losing track of what is live.
   </Accordion>
-
   <Accordion title="Preview screen paths">
     Use the flow preview to inspect screen transitions and action-based routing before you publish.
   </Accordion>
-
   <Accordion title="Translate content">
     Flowboard supports localized flows with `languages` and `translations`, and the editor includes tools to review and update translations per screen.
   </Accordion>
-
   <Accordion title="Add custom native screens">
     When a builder screen is not enough, you can route to a custom screen implemented in your app and still keep the rest of the onboarding flow in Flowboard.
   </Accordion>
@@ -132,13 +121,13 @@ Create an app in Flowboard Studio, generate a first flow with AI or a template, 
 
     ```tsx
     import { Flowboard } from 'flowboard-react';
-
+    
     Flowboard.init({
       apiToken: 'YOUR_BEARER_TOKEN',
       debug: true,
       enableAnalytics: true,
     });
-
+    
     await Flowboard.launchOnboardingById('YOUR_FLOW_ID', {
       locale: 'en_US',
     });
@@ -148,24 +137,22 @@ Create an app in Flowboard Studio, generate a first flow with AI or a template, 
       Expo Go is not supported. Use a development build, `expo prebuild`, or EAS Build.
     </Note>
   </Accordion>
-
   <Accordion title="Flutter">
     ```dart
     import 'package:flowboard/flowboard.dart';
-
+    
     await Flowboard.init(
       apiToken: 'YOUR_BEARER_TOKEN',
       debug: true,
       enableAnalytics: true,
     );
-
+    
     await Flowboard.launchOnboardingById(
       onboardingId: 'YOUR_FLOW_ID',
       locale: 'en_US',
     );
     ```
   </Accordion>
-
   <Accordion title="Mix Flowboard with native code">
     Both SDKs support custom screen builders so you can render Flowboard-managed steps alongside app-specific native screens when a fully custom moment is needed.
   </Accordion>
@@ -177,11 +164,9 @@ Create an app in Flowboard Studio, generate a first flow with AI or a template, 
   <Accordion title="Publish a live version">
     Publishing stores the current flow as the version your app can resolve and display. You can continue iterating in draft while keeping production stable.
   </Accordion>
-
   <Accordion title="Roll out by audience">
     Create rollout rules using app version, country, locale, and operating system, then send traffic to one or more flow variants.
   </Accordion>
-
   <Accordion title="Use Flowboard beyond onboarding">
     The same workflow also fits welcome modals, upgrade prompts, paywalls, feature discovery, and feedback or NPS flows.
   </Accordion>

@@ -31,35 +31,53 @@
             "pages": [
               "welcome-to-flowboard",
               "pricing-and-billing",
-              "quick-start",
-              "index",
+              "quick-start"
+            ]
+          },
+          {
+            "group": "Tools",
+            "pages": [
+              "flows",
+              "audiences",
+              "labs",
+              "pulse"
+            ]
+          },
+          {
+            "group": "Mint Doc",
+            "pages": [
+              {
+                "group": "Writing content",
+                "pages": [
+                  "essentials/markdown",
+                  "essentials/code",
+                  "essentials/images",
+                  "essentials/reusable-snippets",
+                  {
+                    "group": "Customization",
+                    "pages": [
+                      "essentials/settings",
+                      "essentials/navigation"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "AI tools",
+                "pages": [
+                  "ai-tools/cursor",
+                  "ai-tools/claude-code",
+                  "ai-tools/windsurf"
+                ]
+              },
               "squickstart",
-              "development"
+              "development",
+              "index"
             ]
           },
           {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
+            "group": "Account",
+            "pages": []
           }
         ]
       },
@@ -83,6 +101,33 @@
               "api-reference/endpoint/delete",
               "api-reference/endpoint/webhook"
             ]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "anchors": [
+          {
+            "anchor": "Studio",
+            "icon": "laptop",
+            "pages": [
+              "changelog"
+            ]
+          },
+          {
+            "anchor": "Companion",
+            "icon": "mobile"
+          },
+          {
+            "anchor": "Flutter Package",
+            "icon": "code",
+            "pages": [
+              "changelog-1"
+            ]
+          },
+          {
+            "anchor": "React/Expo Package",
+            "icon": "code"
           }
         ]
       }
