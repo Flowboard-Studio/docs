@@ -9,19 +9,6 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Flowboard Studio",
-          "icon": "buildings",
-          "color": {
-            "light": "#3A6EFF",
-            "dark": "#3A6EFF"
-          },
-          "href": "https://studio.flow-board.co/"
-        }
-      ]
-    },
     "tabs": [
       {
         "tab": "Guides",
@@ -35,44 +22,36 @@
             ]
           },
           {
-            "group": "Tools",
-            "pages": [
-              "flows",
-              "audiences",
-              "labs",
-              "pulse"
-            ]
-          },
-          {
-            "group": "Mint Doc",
+            "group": "Feature",
             "pages": [
               {
-                "group": "Writing content",
+                "group": "Flows",
+                "icon": "code-branch",
                 "pages": [
-                  "essentials/markdown",
-                  "essentials/code",
-                  "essentials/images",
-                  "essentials/reusable-snippets",
-                  {
-                    "group": "Customization",
-                    "pages": [
-                      "essentials/settings",
-                      "essentials/navigation"
-                    ]
-                  }
+                  "interface"
                 ]
               },
               {
-                "group": "AI tools",
+                "group": "Audiences",
+                "icon": "users",
                 "pages": [
-                  "ai-tools/cursor",
-                  "ai-tools/claude-code",
-                  "ai-tools/windsurf"
+                  "main-behavior"
                 ]
               },
-              "squickstart",
-              "development",
-              "index"
+              {
+                "group": "Labs",
+                "icon": "flask",
+                "pages": [
+                  "understerding"
+                ]
+              },
+              {
+                "group": "Pulse",
+                "icon": "chart-mixed",
+                "pages": [
+                  "find"
+                ]
+              }
             ]
           },
           {

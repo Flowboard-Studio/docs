@@ -3,3 +3,187 @@ title: "Quick start"
 icon: "stairs"
 ---
 
+Create your first Flows and show it in your app.
+
+<Steps>
+  <Step title="Create an in the Studio">
+    Open the FlowBoard Studio and create a new app.
+  </Step>
+  <Step title="Create a flow and setup the default audience">
+    Add a new flow (use template to faster edition), publish it, then go the Audiences section and make sure to distribute your flow.
+  </Step>
+  <Step title="Create an API Key">
+    In order to retrieve the onboard on your app you should create an API.
+
+    Open your App home page on the studio, click on config the App. Then scroll down to the API key section. 
+
+    <Warning>
+      We advice to only set this key with a read scope for flows. Do prefer using separate API keys to handle granular access.
+    </Warning>
+    <Frame>
+      ![Image](/images/image.png)
+    </Frame>
+  </Step>
+  <Step title="Install our SDK">
+    <CodeGroup>
+
+    ```javascript EXPO
+    //install the SDK
+    npx expo install flowboard-react
+    
+    //auto install natives depedencies
+    npx --package flowoard-react flowboard-setup --yes
+    ```
+
+    
+    ```javascript REACT
+    //install the SDK
+    npm install flowboard-react
+    
+    //install peer dependencies
+    npx --package flowboard-react flowboard-setup --yes
+    ```
+
+    
+    ```dart FLUTTER
+    flutter pub add flowoard_flutter
+    ```
+
+    </CodeGroup>
+  </Step>
+  <Step title="Initialize flowboard">
+    <CodeGroup>
+
+    ```javascript EXPO
+    
+    
+    //inside app/_layout.tsx
+    
+    import { Flowboard, FlowboardProvider } from 'flowboard-react';
+    
+    // Initialisation globale
+    Flowboard.init({
+      apiToken: 'YOUR_API_TOKEN',
+      debug: true
+    });
+    
+    export default function RootLayout() {
+      return (
+        <FlowboardProvider>
+    	{/* Put your app content here */}
+          <Stack />
+        </FlowboardProvider>
+      );
+    }
+    ```
+
+    
+    ```javascript REACT
+    //inside index.js, import at the first position
+    import 'react-native-get-random-values';
+    
+    //inside App.tsx
+    import React, { useEffect } from 'react';
+    import { Flowboard, FlowboardProvider } from 'flowboard-react';
+    
+    function App() {
+      useEffect(() => {
+        Flowboard.init({
+          apiToken: 'YOUR_API_TOKEN',
+          debug: true //set to false in prod
+        });
+      }, []);
+    
+      return (
+        <FlowboardProvider>
+    	{/* Put your app content here */}
+          <AppContent />
+        </FlowboardProvider>
+      );
+    }
+    ```
+
+    
+    ```
+    
+    
+    ```
+
+    
+    ```dart FLUTTER
+    // inside lib/main.dart
+    import 'package:flowboard_flutter/flowboard_flutter.dart';
+    
+    /* ... */
+    
+    void main() {
+    	WidgetsFlutterBinding.ensureInitialized();
+    	
+    	//It is recommended to initialize Flowboard as early as possible
+    	Flowboard.init(
+      		apiToken: 'YOUR_API_TOKEN',
+      		debug: true, //set to false in prod
+     	);
+    
+    /* ... */
+    }
+    ```
+
+    </CodeGroup>
+  </Step>
+  <Step title="Launch your onboarding">
+    <CodeGroup>
+
+    ```javascript EXPO
+    import { Flowboard } from 'flowboard-react';
+    
+    const startOnboarding = async () => {
+      await Flowboard.launchOnboarding({
+        onOnboardEnd: (formData) => {
+          console.log('Onboarding finished - Data:', formData);
+        }
+      });
+    };
+    
+    // ... inside your component
+    <Button title="Start Flow" onPress={startOnboarding} />
+    ```
+
+    
+    ```javascript REACT
+    const handleLaunch = async () => {
+      try {
+        await Flowboard.launchOnboarding(
+    		onOnboardEnd: (formData) => {
+          	console.log('Onboarding finished - Data:', formData);
+        }
+    
+    	);
+      } catch (e) {
+        console.error("Erreur :", e);
+      }
+    };
+    ```
+
+    
+    ```javascript FLUTTER
+    ElevatedButton(
+      onPressed: () async {
+        await Flowboard.launchOnboarding(
+          context,
+          onOnboardEnd: (formData) =>
+              print('Onboarding finished - Data: $formData'),
+        );
+      },
+      child: const Text('Tester Flowboard'),
+    ),
+    ```
+
+    </CodeGroup>
+  </Step>
+</Steps>
+
+expo warning : as we sue native component you can use expo Go
+
+please clean with : rm -rf ios/build && rm -rf node_modules && npm install && npx expo prebuild --clean\
+and relaunch **npx expo run:ios**
