@@ -1,0 +1,91 @@
+---
+title: "Actions and transitions"
+description: "Control what happens after each tap and how users move through a flow."
+icon: "route"
+---
+
+Actions and transitions define the behavior of a flow. They answer a simple question: when a user interacts with this screen, what should happen next?
+
+## What actions and transitions are made for
+
+Use them to:
+
+- Move users forward or backward in a journey
+- Send users to a specific screen
+- Finish a flow cleanly
+- Open a website or deep link
+- Ask for a device permission at the right moment
+
+## How transitions work
+
+Every interactive element can trigger an action. In most flows, that action is connected to a button. Once the action is set, Flowboard uses it to decide the next step in the journey.
+
+## Common action types
+
+<AccordionGroup>
+  <Accordion title="Next">
+    Sends the user to the next screen in the current order. Use this for most linear onboarding journeys.
+  </Accordion>
+  <Accordion title="Previous">
+    Returns the user to the previous screen. Use this only when going back is helpful and low-risk.
+  </Accordion>
+  <Accordion title="Jump to">
+    Sends the user to a specific screen. Use this for branching journeys, skip logic, or segmented paths.
+  </Accordion>
+  <Accordion title="Finish">
+    Ends the flow. Use this on the last step or when a user has completed the key outcome.
+  </Accordion>
+  <Accordion title="Deep link or web URL">
+    Opens another destination, such as a page in your app or an external website.
+  </Accordion>
+  <Accordion title="Request permission">
+    Triggers a permission request, such as notifications, camera, location, or photo access.
+  </Accordion>
+</AccordionGroup>
+
+## How to build a reliable flow path
+
+<Steps>
+  <Step title="Start with the screen order">
+    Put your screens in the order that matches the default path you expect most users to follow.
+  </Step>
+  <Step title="Assign actions to interactive elements">
+    Check every primary button and make sure it has the correct behavior.
+  </Step>
+  <Step title="Use jump rules only when needed">
+    Branching is powerful, but too many alternate paths make a flow harder to maintain and harder to analyze.
+  </Step>
+  <Step title="Review the flow preview map">
+    Use the flow preview to confirm that the routes match your intent before you publish.
+  </Step>
+</Steps>
+
+## When to use linear flows vs branching flows
+
+<CardGroup cols={2}>
+  <Card icon="arrow-right" title="Linear flow">
+    Best when every user should follow the same sequence. This is simpler to maintain and easier to measure.
+  </Card>
+  <Card icon="code-branch" title="Branching flow">
+    Best when the next step depends on a user choice, segment, or special permission moment.
+  </Card>
+</CardGroup>
+
+## Best practices
+
+- Give each screen one clear primary action.
+- Keep branching logic easy to explain to someone outside your team.
+- Place permission requests only after you have explained the value to the user.
+- Test every path in preview, not just the happy path.
+- Avoid dead ends where a screen has no clear way forward.
+
+<Note>
+  If your team uses custom actions connected to app-specific behavior, document the intended result internally so non-technical teammates still understand what that step does.
+</Note>
+
+## Related guides
+
+- [Understand flows](/features/flows-overview)
+- [Manage translations](/features/flows-translations)
+- [Measure results in Pulse](/features/pulse)
+

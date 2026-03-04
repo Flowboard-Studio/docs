@@ -1,0 +1,73 @@
+---
+title: "Labs"
+description: "Run A/B tests on flow variants and promote the winning experience."
+icon: "flask"
+---
+
+Labs is where you run controlled experiments. It helps you compare two or more variants on the same audience instead of guessing which onboarding performs best.
+
+## What Labs is made for
+
+Use Labs when you want to:
+
+- Test different onboarding messages or sequences
+- Compare conversion between two flow variants
+- Validate a redesign before rolling it out to everyone
+- Promote a winner after the results are clear
+
+## How Labs works
+
+Labs sits on top of audiences. The audience defines who is eligible, and the experiment compares how different variants perform for that same group.
+
+In practice, that means:
+
+- You choose the audience rule the test should use
+- You assign the competing flow variants
+- Flowboard tracks traffic and results while the test is running
+- You stop the test and promote the winner when you are ready
+
+## What you can do in Labs
+
+<AccordionGroup>
+  <Accordion title="Monitor active experiments">
+    Review running tests and compare how each variant is performing against the others.
+  </Accordion>
+  <Accordion title="Review archived experiments">
+    Keep a history of past tests so your team can understand what was tried and what won.
+  </Accordion>
+  <Accordion title="Sync tests">
+    Refresh experiment data when you need the latest test state reflected in the dashboard.
+  </Accordion>
+  <Accordion title="Promote a winner">
+    End the experiment and send live traffic to the best-performing variant.
+  </Accordion>
+</AccordionGroup>
+
+## When to use Labs vs a normal rollout
+
+<CardGroup cols={2}>
+  <Card icon="flask" title="Use Labs">
+    Choose Labs when your goal is to learn which variant performs better with the same audience.
+  </Card>
+  <Card icon="rocket-launch" title="Use a normal rollout">
+    Skip Labs when you already know which flow should go live and only need controlled delivery through audiences.
+  </Card>
+</CardGroup>
+
+## Best practices
+
+- Test one major idea at a time.
+- Use clear experiment names that describe the hypothesis.
+- Let the experiment run long enough to gather meaningful traffic.
+- Avoid changing audience rules in the middle of a test unless necessary.
+- Record why a winner was chosen so future teams can learn from the result.
+
+<Tip>
+  The cleanest experiments compare variants that serve the same user segment and aim at the same success metric.
+</Tip>
+
+## Related guides
+
+- [Target flows with audiences](/features/audiences)
+- [Measure performance in Pulse](/features/pulse)
+

@@ -22,41 +22,40 @@
             ]
           },
           {
-            "group": "Feature",
+            "group": "Features",
             "pages": [
+              "features/overview",
               {
                 "group": "Flows",
                 "icon": "code-branch",
                 "pages": [
-                  "interface"
+                  "features/flows-overview",
+                  "features/flows-translations",
+                  "features/flows-actions-transitions"
                 ]
               },
               {
                 "group": "Audiences",
                 "icon": "users",
                 "pages": [
-                  "main-behavior"
+                  "features/audiences"
                 ]
               },
               {
                 "group": "Labs",
                 "icon": "flask",
                 "pages": [
-                  "understerding"
+                  "features/labs"
                 ]
               },
               {
                 "group": "Pulse",
                 "icon": "chart-mixed",
                 "pages": [
-                  "find"
+                  "features/pulse"
                 ]
               }
             ]
-          },
-          {
-            "group": "Account",
-            "pages": []
           }
         ]
       },

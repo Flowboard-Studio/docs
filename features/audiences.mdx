@@ -1,0 +1,92 @@
+---
+title: "Audiences"
+description: "Choose who sees each flow and how traffic is distributed."
+icon: "users"
+---
+
+Audiences control delivery. They decide which users are eligible to see a flow and, when more than one flow is available, how traffic should be split.
+
+## What audiences are made for
+
+Use audiences when you want to:
+
+- Show different flows to different user groups
+- Roll out a new onboarding gradually
+- Target by country, locale, platform, or app version
+- Split traffic between multiple flow variants
+
+## How audiences work
+
+An audience combines two parts:
+
+1. Targeting rules, which define who matches
+2. Variants, which define which flow or flows matched users can receive
+
+When a user qualifies for an audience, Flowboard serves one of the assigned variants based on the traffic weights you set.
+
+## What you can target
+
+Flowboard audiences can be based on:
+
+- Minimum app version
+- Maximum app version
+- Country
+- Locale
+- Operating system
+
+## Priority and overlap
+
+If two audiences could match the same user, priority decides which rule should win first. Use this carefully:
+
+- Give more specific audiences a higher priority
+- Keep broad fallback audiences lower
+- Review priorities after creating a new segment
+
+## Typical audience workflow
+
+<Steps>
+  <Step title="Create the audience">
+    Name the audience based on the business rule, not just the flow name.
+  </Step>
+  <Step title="Set targeting conditions">
+    Add the version, geography, locale, or platform rules that define the intended users.
+  </Step>
+  <Step title="Assign variants">
+    Link one or more flows and define the percentage of traffic each one should receive.
+  </Step>
+  <Step title="Activate and monitor">
+    Turn the audience on, then review delivery and performance in Pulse or Labs.
+  </Step>
+</Steps>
+
+## Common audience patterns
+
+<AccordionGroup>
+  <Accordion title="Default onboarding for all new users">
+    Create a broad audience with minimal restrictions and send 100% of traffic to one primary flow.
+  </Accordion>
+  <Accordion title="Localized onboarding">
+    Create locale-specific audiences when some markets need a different flow, not just translated copy.
+  </Accordion>
+  <Accordion title="Gradual rollout">
+    Start with a narrow version range or a smaller geography, then expand once performance is confirmed.
+  </Accordion>
+  <Accordion title="Variant split">
+    Send traffic across two or more flows when you want to compare results through Labs.
+  </Accordion>
+</AccordionGroup>
+
+## Best practices
+
+- Use clear names such as "US iOS new users" instead of internal shorthand.
+- Keep one fallback audience so eligible users always have a valid experience.
+- Avoid overlapping rules unless the priority order is intentional.
+- Double-check that traffic weights total 100%.
+- Pause or disable old audiences instead of leaving unused logic active.
+
+## Related guides
+
+- [Understand flows](/features/flows-overview)
+- [Run experiments in Labs](/features/labs)
+- [Measure outcomes in Pulse](/features/pulse)
+
