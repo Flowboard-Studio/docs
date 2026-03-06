@@ -1,152 +1,288 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
+    "title": "Flowboard API",
+    "description": "Stable API contract for the 4 services: auth, flow, billing, track.",
+    "version": "1.1.1"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://api.flow-board.co"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "flowboard_jwt": []
     }
   ],
   "paths": {
-    "/plants": {
+    "/flows": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
+        "summary": "Resolve flow for runtime delivery (v0)",
+        "operationId": "getV0Resolve",
+        "security": [
+          {
+            "flowboard_jwt": []
+          }
+        ],
         "parameters": [
           {
-            "name": "limit",
+            "name": "installId",
             "in": "query",
-            "description": "The maximum number of results to return",
+            "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "en_US"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "os",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "appVersion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Resolved flow payload",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid query parameters"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "No matching flow found"
+          }
+        }
+      }
+    },
+    "/flows/{flowId}": {
+      "parameters": [
+        {
+          "name": "flowId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Get a single flow by id",
+        "operationId": "getV1FlowById",
+        "security": [
+          {
+            "flowboard_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "en"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "live",
+                "draft"
+              ],
+              "default": "live"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Flow payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "flowId": {
+                      "type": "string"
+                    },
+                    "screens": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
+          "403": {
+            "description": "Forbidden"
           },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
-                }
-              }
-            }
+          "404": {
+            "description": "Flow not found"
           },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/flows/generate": {
+      "post": {
+        "summary": "Generate onboarding flow with AI (v0)",
+        "operationId": "postV0FlowGeneration",
+        "security": [
+          {
+            "flowboard_jwt": []
+          }
+        ],
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
-            "required": true,
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Request-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
-        "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
         "requestBody": {
-          "description": "Plant added to the store",
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/AiFlowGenerationRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
+            "description": "Generation completed or replayed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiFlowGenerationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "App not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "description": "Upstream provider rejected request"
+          }
+        }
+      }
+    },
+    "/track": {
+      "post": {
+        "summary": "Track analytics event (v0)",
+        "operationId": "postV0TrackEvent",
+        "security": [
+          {
+            "flowboard_jwt": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackEventRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event captured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid request payload"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
@@ -154,63 +290,190 @@
   },
   "components": {
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "AiFlowGenerationRequest": {
         "type": "object",
+        "required": [
+          "prompt"
+        ],
         "properties": {
-          "name": {
-            "description": "The name of the plant",
+          "prompt": {
+            "type": "string",
+            "minLength": 20
+          },
+          "generationId": {
             "type": "string"
           },
-          "tag": {
-            "description": "Tag to specify the type",
+          "flowId": {
             "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "appName": {
+            "type": "string"
+          },
+          "industry": {
+            "type": "string"
+          },
+          "targetAudience": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "brand": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "visualStyle": {
+            "type": "string"
+          },
+          "includePermissions": {
+            "type": "boolean"
+          },
+          "includeRateAppStep": {
+            "type": "boolean"
+          },
+          "stepCount": {
+            "type": "integer"
+          },
+          "presetKey": {
+            "type": "string"
+          },
+          "publishMode": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ]
+          },
+          "publishForResolver": {
+            "type": "boolean"
+          },
+          "forceRegenerate": {
+            "type": "boolean"
+          },
+          "inspiration": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "promptOverrides": {
+            "type": "object",
+            "additionalProperties": true
           }
         }
       },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
+      "AiFlowGenerationResponse": {
         "type": "object",
         "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
+          "generationId": {
             "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "COMPLETED"
+            ]
+          },
+          "reused": {
+            "type": "boolean"
+          },
+          "flowId": {
+            "type": "string"
+          },
+          "draftId": {
+            "type": "string"
+          },
+          "flowName": {
+            "type": "string"
+          },
+          "publishStatus": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "jsonUrl": {
+            "type": "string"
+          },
+          "storagePath": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "screenPlan": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "audienceLinking": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "onboarding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "TrackEventRequest": {
+        "type": "object",
+        "required": [
+          "event_id",
+          "name",
+          "timestamp"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bundle_id": {
+            "type": "string"
+          },
+          "flow_id": {
+            "type": "string"
+          },
+          "context": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "flow_context": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true
           }
         }
       }
     },
     "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+      "flowboard_jwt": {
+        "type": "oauth2",
+        "flows": {
+          "implicit": {
+            "authorizationUrl": "https://auth-638704832888.europe-west1.run.app/.well-known/jwks.json",
+            "scopes": {}
+          }
+        }
       }
     }
   }

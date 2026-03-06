@@ -140,6 +140,7 @@
           },
           {
             "group": "Endpoint examples",
+            "openapi": "api-reference/openapi.json",
             "pages": [
               "api-reference/endpoint/get",
               "api-reference/endpoint/create",
