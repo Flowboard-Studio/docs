@@ -1,4 +1,251 @@
 ---
 title: "Custom tracking"
+description: "Send Flowboard events to your own MMP, ads SDK, or product analytics stack."
 icon: "link"
 ---
+
+Flowboard does not force a tracking vendor.
+
+Use `onStepChange` and `onOnboardEnd` to send events to your own tools (MMP, ads SDK, product analytics).
+
+## What you can track from Flowboard callbacks
+
+| Callback | When it fires | Data you receive |
+| --- | --- | --- |
+| `onStepChange(stepId, pageStep, formData)` | Every time the user lands on a step | `stepId` (screen id), `pageStep` (0-based step index), `formData` (current snapshot of answers) |
+| `onOnboardEnd(formData)` | When the flow finishes | `formData` (final collected answers) |
+
+`formData` keys match your Flowboard input `id` values.
+
+Example:
+
+```json
+{
+  "email": "ada@example.com",
+  "plan": "pro",
+  "accept_terms": true
+}
+```
+
+<Tip>
+  Keep input `id` values stable in Flowboard. They are your analytics data contract.
+</Tip>
+
+## Simple custom tracking examples
+
+Use this pattern when you only need to forward events to your own tracking layer.
+
+<CodeGroup>
+
+```tsx React Native / Expo
+import { Flowboard } from 'flowboard-react';
+
+export async function launchTrackedFlow() {
+  await Flowboard.launchOnboarding({
+    onOnboardEnd: (formData) => {
+      console.log('Flow finished:', formData);
+      myTracking.track('flow_completed', {
+        plan: typeof formData.plan === 'string' ? formData.plan : undefined,
+        acceptedTerms: Boolean(formData.accept_terms),
+      });
+    },
+    onStepChange: (stepId, pageStep, formData) => {
+      console.log('User moved to step:', stepId, pageStep, formData);
+      myTracking.track('flow_step_viewed', {
+        stepId,
+        pageStep,
+        plan: typeof formData.plan === 'string' ? formData.plan : undefined,
+      });
+    },
+  });
+}
+```
+
+```dart Flutter
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+Future<void> launchTrackedFlow(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    onOnboardEnd: (formData) {
+      debugPrint('Flow finished: $formData');
+      myTracking.track('flow_completed', {
+        'plan': formData['plan'],
+        'acceptedTerms': formData['accept_terms'] == true,
+      });
+    },
+    onStepChange: (stepId, pageStep, formData) {
+      debugPrint('User moved to step: $stepId $pageStep $formData');
+      myTracking.track('flow_step_viewed', {
+        'stepId': stepId,
+        'pageStep': pageStep,
+        'plan': formData['plan'],
+      });
+    },
+  );
+}
+```
+
+</CodeGroup>
+
+## Concrete example: Amplitude + Adjust
+
+The example below sends:
+
+- Product analytics events to Amplitude
+- Attribution / marketing events to Adjust
+
+<Warning>
+  For Expo, use a development build or prebuild setup for native SDKs such as Adjust.
+</Warning>
+
+### React Native / Expo (development build)
+
+```bash
+npm install @amplitude/analytics-react-native react-native-adjust
+```
+
+<CodeGroup>
+
+```tsx React Native / Expo
+import { Flowboard } from 'flowboard-react';
+import { init as amplitudeInit, track as amplitudeTrack } from '@amplitude/analytics-react-native';
+import { Adjust, AdjustConfig, AdjustEnvironment, AdjustEvent } from 'react-native-adjust';
+
+const ADJUST_STEP_TOKEN = 'abc123';
+const ADJUST_COMPLETE_TOKEN = 'xyz789';
+
+export function initTracking() {
+  amplitudeInit('AMPLITUDE_API_KEY');
+
+  const config = new AdjustConfig('ADJUST_APP_TOKEN', AdjustEnvironment.Production);
+  Adjust.create(config);
+}
+
+function trackAdjustStep(stepId: string, pageStep: number) {
+  const event = new AdjustEvent(ADJUST_STEP_TOKEN);
+  event.addCallbackParameter('step_id', stepId);
+  event.addCallbackParameter('page_step', String(pageStep));
+  Adjust.trackEvent(event);
+}
+
+function trackAdjustComplete(plan: string | undefined) {
+  const event = new AdjustEvent(ADJUST_COMPLETE_TOKEN);
+  if (plan) event.addCallbackParameter('plan', plan);
+  Adjust.trackEvent(event);
+}
+
+export async function launchTrackedFlow() {
+  await Flowboard.launchOnboarding({
+    onStepChange: (stepId, pageStep, formData) => {
+      const plan = typeof formData.plan === 'string' ? formData.plan : undefined;
+
+      amplitudeTrack('flow_step_viewed', {
+        step_id: stepId,
+        page_step: pageStep,
+        plan,
+      });
+
+      if (typeof stepId === 'string' && stepId.length > 0) {
+        trackAdjustStep(stepId, pageStep);
+      }
+    },
+    onOnboardEnd: (formData) => {
+      const plan = typeof formData.plan === 'string' ? formData.plan : undefined;
+
+      amplitudeTrack('flow_completed', {
+        plan,
+        accepted_terms: formData.accept_terms === true,
+      });
+
+      trackAdjustComplete(plan);
+    },
+  });
+}
+```
+
+</CodeGroup>
+
+### Flutter
+
+```bash
+flutter pub add amplitude_flutter adjust_sdk
+```
+
+<CodeGroup>
+
+```dart Flutter
+import 'package:amplitude_flutter/amplitude.dart';
+import 'package:adjust_sdk/adjust.dart';
+import 'package:adjust_sdk/adjust_config.dart';
+import 'package:adjust_sdk/adjust_event.dart';
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+const String adjustStepToken = 'abc123';
+const String adjustCompleteToken = 'xyz789';
+
+final Amplitude amplitude = Amplitude.getInstance();
+
+void initTracking() {
+  amplitude.init('AMPLITUDE_API_KEY');
+
+  final config = AdjustConfig('ADJUST_APP_TOKEN', AdjustEnvironment.production);
+  Adjust.initSdk(config);
+}
+
+void trackAdjustStep(String stepId, int pageStep) {
+  final event = AdjustEvent(adjustStepToken);
+  event.addCallbackParameter('step_id', stepId);
+  event.addCallbackParameter('page_step', pageStep.toString());
+  Adjust.trackEvent(event);
+}
+
+void trackAdjustComplete(String? plan) {
+  final event = AdjustEvent(adjustCompleteToken);
+  if (plan != null && plan.isNotEmpty) {
+    event.addCallbackParameter('plan', plan);
+  }
+  Adjust.trackEvent(event);
+}
+
+Future<void> launchTrackedFlow(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    onStepChange: (stepId, pageStep, formData) {
+      final plan = formData['plan'] as String?;
+
+      amplitude.logEvent('flow_step_viewed', eventProperties: {
+        'step_id': stepId,
+        'page_step': pageStep,
+        'plan': plan,
+      });
+
+      if (stepId.isNotEmpty) {
+        trackAdjustStep(stepId, pageStep);
+      }
+    },
+    onOnboardEnd: (formData) {
+      final plan = formData['plan'] as String?;
+
+      amplitude.logEvent('flow_completed', eventProperties: {
+        'plan': plan,
+        'accepted_terms': formData['accept_terms'] == true,
+      });
+
+      trackAdjustComplete(plan);
+    },
+  );
+}
+```
+
+</CodeGroup>
+
+## Tracking recommendations
+
+- Avoid sending raw PII to ad attribution tools unless your policy allows it.
+- Keep event names stable (`flow_step_viewed`, `flow_completed`).
+- Forward only the fields your downstream tools actually use.
+- Version your event schema if you change `formData` keys.

@@ -62,8 +62,8 @@
             "pages": [
               "retrieve-flow-data",
               "custom-screen",
-              "custom-actions",
-              "custom-tracking"
+              "custom-tracking",
+              "custom-actions"
             ]
           }
         ]
