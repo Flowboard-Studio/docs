@@ -1,6 +1,6 @@
 ---
 title: "Quick start"
-description: "Create, publish, and launch your first Flowboard flow in a React Native, Expo, or Flutter app."
+description: "Create, publish, and launch your first Flowboard flow in a React Native, Expo, Flutter, native iOS, or native Android app."
 icon: "stairs"
 ---
 
@@ -22,7 +22,7 @@ Create your first flow in Flowboard Studio, connect it to your app, and launch i
 Make sure you have:
 
 - Access to [Flowboard Studio](https://studio.flow-board.co/)
-- An existing mobile app in **React Native**, **Expo development build**, or **Flutter**
+- An existing mobile app in **React Native**, **Expo development build**, **Flutter**, **native iOS**, or **native Android**
 - Your app identifier ready:
   - **iOS**: bundle ID
   - **Android**: package name
@@ -123,6 +123,64 @@ flutter pub add flowboard_flutter
 
 </CodeGroup>
 
+### Native iOS
+
+The current native iOS SDK is integrated as a local Swift Package from the Flowboard suite repo.
+
+In Xcode:
+
+1. Open your app project.
+2. Go to `File` -> `Add Package Dependencies...`.
+3. Click `Add Local...`.
+4. Select the `flowboard-ios` folder.
+5. Add:
+   - `FlowboardUIKit` for UIKit apps
+   - `FlowboardSwiftUI` if you also need the SwiftUI wrapper
+
+If your app uses `Package.swift`, add the local dependency:
+
+```swift
+dependencies: [
+  .package(path: "../flowboard-ios")
+],
+targets: [
+  .target(
+    name: "YourApp",
+    dependencies: [
+      .product(name: "FlowboardUIKit", package: "flowboard-ios"),
+      .product(name: "FlowboardSwiftUI", package: "flowboard-ios")
+    ]
+  )
+]
+```
+
+### Native Android
+
+The current native Android SDK is integrated as sibling Gradle modules from the Flowboard suite repo.
+
+In `settings.gradle.kts`:
+
+```kotlin
+include(":flowboard-core")
+include(":flowboard-view")
+include(":flowboard-compose")
+
+project(":flowboard-core").projectDir = file("../flowboard-android/flowboard-core")
+project(":flowboard-view").projectDir = file("../flowboard-android/flowboard-view")
+project(":flowboard-compose").projectDir = file("../flowboard-android/flowboard-compose")
+```
+
+In your app module `build.gradle.kts`:
+
+```kotlin
+dependencies {
+  implementation(project(":flowboard-view"))
+  implementation(project(":flowboard-compose"))
+}
+```
+
+If your app only uses the Android View system, `implementation(project(":flowboard-view"))` is enough.
+
 <Note>
   After installation, rebuild the app so native dependencies are compiled correctly.
 </Note>
@@ -193,6 +251,25 @@ void main() {
 }
 ```
 
+```swift iOS
+import FlowboardUIKit
+
+Flowboard.initialize(
+  apiToken: "YOUR_API_TOKEN",
+  debug: true
+)
+```
+
+```kotlin Android
+import co.flowboard.view.Flowboard
+
+Flowboard.initialize(
+  context = applicationContext,
+  apiToken = "YOUR_API_TOKEN",
+  debug = true
+)
+```
+
 </CodeGroup>
 
 <Tip>
@@ -246,6 +323,57 @@ class LaunchFlowButton extends StatelessWidget {
       },
       child: const Text('Start flow'),
     );
+  }
+}
+```
+
+```swift iOS
+import FlowboardUIKit
+
+func startFlow() {
+  Task {
+    do {
+      let controller = try await Flowboard.launchOnboarding(
+        from: self,
+        options: .init(
+          onOnboardEnd: { formData in
+            print("Flow finished:", formData)
+          }
+        )
+      )
+
+      // Host-managed dismissal
+      controller.dismiss(animated: true)
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
+}
+```
+
+```kotlin Android
+import androidx.lifecycle.lifecycleScope
+import co.flowboard.core.FlowboardLaunchOptions
+import co.flowboard.view.Flowboard
+import kotlinx.coroutines.launch
+
+fun startFlow() {
+  lifecycleScope.launch {
+    try {
+      val fragment = Flowboard.launchOnboarding(
+        activity = this@MainActivity,
+        options = FlowboardLaunchOptions(
+          onOnboardEnd = { formData ->
+            println("Flow finished: $formData")
+          }
+        )
+      )
+
+      // Host-managed cleanup
+      supportFragmentManager.beginTransaction().remove(fragment).commit()
+    } catch (error: Throwable) {
+      error.printStackTrace()
+    }
   }
 }
 ```
