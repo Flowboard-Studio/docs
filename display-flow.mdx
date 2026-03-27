@@ -1,0 +1,216 @@
+---
+title: "Display flow"
+description: "Understand the two ways to open a Flowboard flow inside your app and when to use each one."
+icon: "play"
+---
+
+<Info>
+  If you want the full setup from Studio to SDK initialization, start with [Quick start](/quick-start). This page assumes Flowboard is already installed and initialized in your app.
+</Info>
+
+Flowboard currently exposes two ways to display a flow inside your app.
+
+The SDK method names still use `launchOnboarding`, but they open any published Flowboard flow.
+
+For React Native and Expo, the examples below also assume your app is already wrapped in `FlowboardProvider`.
+
+## The two launch modes
+
+| Method | What it does | Best for |
+| --- | --- | --- |
+| `launchOnboarding()` | Opens the default published flow resolved for the current app, device, and audience. | Normal production entry points where Studio should decide which flow to show. |
+| `launchOnboardingById(...)` | Fetches and opens one specific flow by ID. | QA, previews, campaigns, or app code that must always open one exact flow. |
+
+`launchOnboarding()` uses the flow data resolved during `Flowboard.init()` and cached locally. `launchOnboardingById(...)` fetches the requested flow directly when you launch it.
+
+<Note>
+  React Native, Expo, and Flutter expose both launch modes directly today. The native iOS and Android SDKs are currently in beta, so the beta examples below focus on the default resolved launcher.
+</Note>
+
+## 1. Launch the default resolved flow
+
+Use this when Flowboard should decide which published flow to show based on your app identifiers, targeting rules, and rollout logic.
+
+<CodeGroup>
+
+```tsx Expo / React Native
+import { Button } from 'react-native';
+import { Flowboard } from 'flowboard-react';
+
+async function openDefaultFlow() {
+  await Flowboard.launchOnboarding({
+    onOnboardEnd: (formData) => {
+      console.log('Flow finished:', formData);
+    },
+  });
+}
+
+export function LaunchDefaultFlowButton() {
+  return <Button title="Open Flowboard flow" onPress={openDefaultFlow} />;
+}
+```
+
+```dart Flutter
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+Future<void> openDefaultFlow(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    onOnboardEnd: (formData) {
+      debugPrint('Flow finished: $formData');
+    },
+  );
+}
+
+class LaunchDefaultFlowButton extends StatelessWidget {
+  const LaunchDefaultFlowButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => openDefaultFlow(context),
+      child: const Text('Open Flowboard flow'),
+    );
+  }
+}
+```
+
+```swift iOS (Beta)
+import FlowboardUIKit
+
+func openDefaultFlow() {
+  Task {
+    do {
+      let controller = try await Flowboard.launchOnboarding(
+        from: self,
+        options: .init(
+          onOnboardEnd: { formData in
+            print("Flow finished:", formData)
+          }
+        )
+      )
+
+      // Host-managed dismissal
+      controller.dismiss(animated: true)
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
+}
+```
+
+```kotlin Android (Beta)
+import androidx.lifecycle.lifecycleScope
+import co.flowboard.core.FlowboardLaunchOptions
+import co.flowboard.view.Flowboard
+import kotlinx.coroutines.launch
+
+fun openDefaultFlow() {
+  lifecycleScope.launch {
+    try {
+      val fragment = Flowboard.launchOnboarding(
+        activity = this@MainActivity,
+        options = FlowboardLaunchOptions(
+          onOnboardEnd = { formData ->
+            println("Flow finished: $formData")
+          }
+        )
+      )
+
+      // Host-managed cleanup
+      supportFragmentManager.beginTransaction().remove(fragment).commit()
+    } catch (error: Throwable) {
+      error.printStackTrace()
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+This is the best default for most apps because:
+
+- You do not hardcode a flow ID in the app
+- Studio can swap the live flow without an app release
+- Audience targeting and rollout rules stay in Flowboard
+
+## 2. Launch a specific flow by ID
+
+Use this when your app should always open one exact flow, such as a QA entry point, a preview button, a targeted campaign, or an internal test surface.
+
+<CodeGroup>
+
+```tsx Expo / React Native
+import { Button } from 'react-native';
+import { Flowboard } from 'flowboard-react';
+
+const FLOW_ID = 'YOUR_FLOW_ID';
+
+async function openSpecificFlow() {
+  await Flowboard.launchOnboardingById(FLOW_ID, {
+    locale: 'en_US',
+    version: 'live',
+    onOnboardEnd: (formData) => {
+      console.log('Pinned flow finished:', formData);
+    },
+  });
+}
+
+export function LaunchSpecificFlowButton() {
+  return <Button title="Open specific flow" onPress={openSpecificFlow} />;
+}
+```
+
+```dart Flutter
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+const flowId = 'YOUR_FLOW_ID';
+
+Future<void> openSpecificFlow(BuildContext context) async {
+  await Flowboard.launchOnboardingById(
+    context,
+    onboardingId: flowId,
+    locale: 'en_US',
+    version: FlowboardFlowVersion.live,
+    onOnboardEnd: (formData) {
+      debugPrint('Pinned flow finished: $formData');
+    },
+  );
+}
+
+class LaunchSpecificFlowButton extends StatelessWidget {
+  const LaunchSpecificFlowButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => openSpecificFlow(context),
+      child: const Text('Open specific flow'),
+    );
+  }
+}
+```
+
+</CodeGroup>
+
+This is the right choice when:
+
+- You already know the exact flow ID to open
+- You need a fixed QA or preview route in the app
+- You want to choose `live` or `draft` explicitly during testing
+
+## Key differences
+
+- `launchOnboarding()` lets Flowboard resolve the live experience for the current user and app context.
+- `launchOnboardingById(...)` skips that resolution step and requests one exact flow directly.
+- `launchOnboarding()` is usually the best production default.
+- `launchOnboardingById(...)` is better for controlled entry points, testing, and tooling.
+
+## Related guides
+
+- [Quick start](/quick-start)
+- [Retrieve flow data](/retrieve-flow-data)
+- [Custom screen](/custom-screen)
+- [Custom actions](/custom-actions)
