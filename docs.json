@@ -131,7 +131,8 @@
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API reference ",
+        "hidden": true,
         "groups": [
           {
             "group": "API documentation",
@@ -153,6 +154,7 @@
       },
       {
         "tab": "Changelog",
+        "hidden": true,
         "anchors": [
           {
             "anchor": "Studio",
