@@ -98,6 +98,7 @@
             "group": "Media",
             "pages": [
               "components/image",
+              "components/video",
               "components/lottie"
             ]
           },
