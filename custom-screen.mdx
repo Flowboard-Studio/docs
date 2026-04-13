@@ -8,10 +8,6 @@ Use a custom screen when one step of your flow should be rendered by your app in
 
 When Flowboard reaches a screen with `type: "custom"`, the React Native and Flutter SDKs call your `customScreenBuilder`.
 
-<Warning>
-  Native iOS in `flowboard-pckg-swift` `1.0.0` does not yet expose a `customScreenBuilder` or an in-flow `type: "custom"` screen replacement API. If you build with Swift today, the closest workaround is to intercept a custom action with `onCustomAction(...)` and present your own native screen, sheet, or paywall from there.
-</Warning>
-
 On SDKs that expose `customScreenBuilder`, the builder receives a context object with:
 
 - `ctx.formData`: the data already collected in the flow
