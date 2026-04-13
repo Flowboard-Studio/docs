@@ -21,10 +21,10 @@ For React Native and Expo, the examples below also assume your app is already wr
 | `launchOnboarding()` | Opens the default published flow resolved for the current app, device, and audience. | Normal production entry points where Studio should decide which flow to show. |
 | `launchOnboardingById(...)` | Fetches and opens one specific flow by ID. | QA, previews, campaigns, or app code that must always open one exact flow. |
 
-`launchOnboarding()` uses the flow data resolved during `Flowboard.init()` and cached locally. `launchOnboardingById(...)` fetches the requested flow directly when you launch it.
+`launchOnboarding()` opens the default published flow for the current app context. Depending on the SDK, that flow may be resolved during initialization or fetched when you launch it. `launchOnboardingById(...)` fetches the requested flow directly when you launch it.
 
 <Note>
-  React Native, Expo, and Flutter expose both launch modes directly today. The native iOS and Android SDKs are currently in beta, so the beta examples below focus on the default resolved launcher.
+  React Native, Expo, Flutter, and native iOS expose both launch modes directly today. The native Android SDK is still in beta, so the Android example below focuses on the default resolved launcher.
 </Note>
 
 ## 1. Launch the default resolved flow
@@ -76,23 +76,21 @@ class LaunchDefaultFlowButton extends StatelessWidget {
 }
 ```
 
-```swift iOS (Beta)
-import FlowboardUIKit
+```swift iOS
+import FlowboardSwiftUIKit
+import UIKit
 
-func openDefaultFlow() {
-  Task {
+func openDefaultFlow(from host: UIViewController) {
+  Task { @MainActor in
     do {
-      let controller = try await Flowboard.launchOnboarding(
-        from: self,
+      try await Flowboard.launchOnboarding(
+        from: host,
         options: .init(
           onOnboardEnd: { formData in
             print("Flow finished:", formData)
           }
         )
       )
-
-      // Host-managed dismissal
-      controller.dismiss(animated: true)
     } catch {
       print("Failed to launch Flowboard:", error)
     }
@@ -189,6 +187,31 @@ class LaunchSpecificFlowButton extends StatelessWidget {
       onPressed: () => openSpecificFlow(context),
       child: const Text('Open specific flow'),
     );
+  }
+}
+```
+
+```swift iOS
+import FlowboardSwiftUIKit
+import UIKit
+
+let flowID = "YOUR_FLOW_ID"
+
+func openSpecificFlow(from host: UIViewController) {
+  Task { @MainActor in
+    do {
+      try await Flowboard.launchOnboardingById(
+        flowID,
+        from: host,
+        options: .init(
+          onOnboardEnd: { formData in
+            print("Pinned flow finished:", formData)
+          }
+        )
+      )
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
   }
 }
 ```
