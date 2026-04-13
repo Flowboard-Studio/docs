@@ -88,6 +88,47 @@ Future<void> launchTrackedFlow(BuildContext context) async {
 }
 ```
 
+```swift iOS
+import FlowboardSwiftCore
+import FlowboardSwiftUIKit
+import UIKit
+
+func launchTrackedFlow(from host: UIViewController) {
+  Task {
+    do {
+      try await Flowboard.launchOnboarding(
+        from: host,
+        options: .init(
+          onOnboardEnd: { formData in
+            print("Flow finished:", formData)
+            myTracking.track(
+              "flow_completed",
+              properties: [
+                "plan": formData.string("plan") ?? "",
+                "acceptedTerms": formData.bool("accept_terms") ?? false
+              ]
+            )
+          },
+          onStepChange: { stepId, pageStep, formData in
+            print("User moved to step:", stepId ?? "", pageStep, formData)
+            myTracking.track(
+              "flow_step_viewed",
+              properties: [
+                "stepId": stepId ?? "",
+                "pageStep": pageStep,
+                "plan": formData.string("plan") ?? ""
+              ]
+            )
+          }
+        )
+      )
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
+}
+```
+
 </CodeGroup>
 
 ## Concrete example: Amplitude + Adjust
@@ -174,6 +215,8 @@ export async function launchTrackedFlow() {
 flutter pub add amplitude_flutter adjust_sdk
 ```
 
+For native iOS, install your Amplitude and Adjust SDKs in the same app target that hosts Flowboard, then forward Flowboard callbacks into those SDKs from one small bridge object.
+
 <CodeGroup>
 
 ```dart Flutter
@@ -238,6 +281,76 @@ Future<void> launchTrackedFlow(BuildContext context) async {
       trackAdjustComplete(plan);
     },
   );
+}
+```
+
+```swift iOS
+import FlowboardSwiftCore
+import FlowboardSwiftUIKit
+import UIKit
+
+let adjustStepToken = "abc123"
+let adjustCompleteToken = "xyz789"
+
+func trackAmplitude(_ event: String, properties: [String: Any]) {
+  amplitude.track(event, properties: properties)
+}
+
+func trackAdjust(token: String, callbackParameters: [String: String]) {
+  adjust.trackEvent(token: token, callbackParameters: callbackParameters)
+}
+
+func launchTrackedFlow(from host: UIViewController) {
+  Task {
+    do {
+      try await Flowboard.launchOnboarding(
+        from: host,
+        options: .init(
+          onStepChange: { stepId, pageStep, formData in
+            let plan = formData.string("plan")
+
+            trackAmplitude(
+              "flow_step_viewed",
+              properties: [
+                "step_id": stepId ?? "",
+                "page_step": pageStep,
+                "plan": plan ?? ""
+              ]
+            )
+
+            if let stepId, !stepId.isEmpty {
+              trackAdjust(
+                token: adjustStepToken,
+                callbackParameters: [
+                  "step_id": stepId,
+                  "page_step": String(pageStep)
+                ]
+              )
+            }
+          },
+          onOnboardEnd: { formData in
+            let plan = formData.string("plan")
+
+            trackAmplitude(
+              "flow_completed",
+              properties: [
+                "plan": plan ?? "",
+                "accepted_terms": formData.bool("accept_terms") ?? false
+              ]
+            )
+
+            var params: [String: String] = [:]
+            if let plan, !plan.isEmpty {
+              params["plan"] = plan
+            }
+            trackAdjust(token: adjustCompleteToken, callbackParameters: params)
+          }
+        )
+      )
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
 }
 ```
 

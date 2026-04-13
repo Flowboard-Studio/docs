@@ -121,69 +121,49 @@ npx --package flowboard-react flowboard-setup --yes
 flutter pub add flowboard_flutter
 ```
 
-</CodeGroup>
+```swift iOS (Xcode)
+/* File > Add Package Dependencies...
 
-### Native iOS
+Repository:
+https://github.com/Flowboard-Studio/flowboard-pckg-swift.git
 
-The current native iOS SDK is integrated as a local Swift Package from the Flowboard suite repo.
+Dependency rule:
+Up to Next Major Version
 
-In Xcode:
+Version:
+1.0.0
 
-1. Open your app project.
-2. Go to `File` -> `Add Package Dependencies...`.
-3. Click `Add Local...`.
-4. Select the `flowboard-ios` folder.
-5. Add:
-   - `FlowboardUIKit` for UIKit apps
-   - `FlowboardSwiftUI` if you also need the SwiftUI wrapper
+Add these products to your target as needed:
+- FlowboardSwiftUIKit
+- FlowboardSwiftUI
+- FlowboardSwiftCore */
 
-If your app uses `Package.swift`, add the local dependency:
+// Add only the products you use in this target.
+// FlowboardSwiftUIKit contains initialize(), launchOnboarding(), and launchOnboardingById().
 
-```swift
 dependencies: [
-  .package(path: "../flowboard-ios")
+  .package(url: "https://github.com/Flowboard-Studio/flowboard-pckg-swift.git", from: "1.0.0")
 ],
 targets: [
   .target(
     name: "YourApp",
     dependencies: [
-      .product(name: "FlowboardUIKit", package: "flowboard-ios"),
-      .product(name: "FlowboardSwiftUI", package: "flowboard-ios")
+      // Add only the products you use in this target.
+      .product(name: "FlowboardSwiftUIKit", package: "flowboard-pckg-swift"),
+      .product(name: "FlowboardSwiftUI", package: "flowboard-pckg-swift"),
+      .product(name: "FlowboardSwiftCore", package: "flowboard-pckg-swift")
     ]
   )
 ]
+
+/*
+`Flowboard.initialize(...)`, `launchOnboarding(...)`, and `launchOnboardingById(...)` live in `FlowboardSwiftUIKit`. Use a valid Flowboard API token when you initialize, do that before the first launch, add `FlowboardSwiftUI` when you want to render a `FlowboardScreen` inside SwiftUI, and make sure your app can access the network when you load published flows remotely.
+*/
 ```
 
-### Native Android
+</CodeGroup>
 
-The current native Android SDK is integrated as sibling Gradle modules from the Flowboard suite repo.
 
-In `settings.gradle.kts`:
-
-```kotlin
-include(":flowboard-core")
-include(":flowboard-view")
-include(":flowboard-compose")
-
-project(":flowboard-core").projectDir = file("../flowboard-android/flowboard-core")
-project(":flowboard-view").projectDir = file("../flowboard-android/flowboard-view")
-project(":flowboard-compose").projectDir = file("../flowboard-android/flowboard-compose")
-```
-
-In your app module `build.gradle.kts`:
-
-```kotlin
-dependencies {
-  implementation(project(":flowboard-view"))
-  implementation(project(":flowboard-compose"))
-}
-```
-
-If your app only uses the Android View system, `implementation(project(":flowboard-view"))` is enough.
-
-<Note>
-  After installation, rebuild the app so native dependencies are compiled correctly.
-</Note>
 
 ## 5. Initialize Flowboard
 
@@ -252,7 +232,7 @@ void main() {
 ```
 
 ```swift iOS
-import FlowboardUIKit
+import FlowboardSwiftUIKit
 
 Flowboard.initialize(
   apiToken: "YOUR_API_TOKEN",
@@ -328,12 +308,12 @@ class LaunchFlowButton extends StatelessWidget {
 ```
 
 ```swift iOS
-import FlowboardUIKit
+import FlowboardSwiftUIKit
 
 func startFlow() {
   Task {
     do {
-      let controller = try await Flowboard.launchOnboarding(
+      try await Flowboard.launchOnboarding(
         from: self,
         options: .init(
           onOnboardEnd: { formData in
@@ -341,9 +321,6 @@ func startFlow() {
           }
         )
       )
-
-      // Host-managed dismissal
-      controller.dismiss(animated: true)
     } catch {
       print("Failed to launch Flowboard:", error)
     }

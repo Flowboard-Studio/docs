@@ -19,6 +19,10 @@ Use a custom action when one step needs to call your own app logic, such as open
 
 When Flowboard sees an action it does not handle internally, it calls `customActionBuilder(action, ctx, data)`.
 
+<Note>
+  Native iOS uses a different surface: `onCustomAction(context)` handles only custom actions, and `onAction(context)` lets you observe any action before Flowboard performs its default behavior.
+</Note>
+
 ## What the handler receives
 
 Your handler receives:
@@ -28,6 +32,13 @@ Your handler receives:
 - `data`: a merged payload containing the component `properties` and any `actionData`
 
 That means `actionData` is the right place for business inputs, while component properties can still be useful for labels or presentation defaults.
+
+For native iOS, the equivalent context is `FlowboardActionContext`, which gives you:
+
+- `ctx.action.payload`: the merged custom action payload
+- `ctx.values`: the current collected flow values
+- `ctx.screenID`: the active screen id
+- `ctx.sourceComponentID`: the tapped component id when available
 
 ## Basic flow shape
 
@@ -114,7 +125,44 @@ Future<void> startFlow(BuildContext context) async {
 }
 ```
 
+```swift iOS
+import FlowboardSwiftCore
+import FlowboardSwiftUIKit
+import UIKit
+
+func startFlow(from host: UIViewController) {
+  Task {
+    do {
+      try await Flowboard.launchOnboarding(
+        from: host,
+        options: .init(
+          onCustomAction: { ctx in
+            let actionName = ctx.action.payload.string("name") ?? ""
+            guard actionName == "open_checkout" else {
+              return .performDefault
+            }
+
+            let plan = ctx.action.payload.string("plan") ?? "free"
+            billing.presentCheckout(
+              plan: plan,
+              customerEmail: ctx.values.string("email")
+            )
+            return .handled
+          }
+        )
+      )
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
+}
+```
+
 </CodeGroup>
+
+<Note>
+  On native iOS, custom actions are side-effect hooks. They do not expose `ctx.onNext()` or `ctx.onJumpTo()`, so keep navigation inside the flow with standard Flowboard actions such as `next`, `finish`, or `jump_to`.
+</Note>
 
 <Tip>
   Keep the custom action name stable and explicit, such as `open_checkout`, `create_account`, or `apply_referral_code`. Avoid overloaded names like `submit`.
@@ -131,6 +179,8 @@ Recommended structure:
 - A thin `customActionBuilder`
 - One `routeFlowboardAction` function with a `switch`
 - Small helper functions that parse `data`, call your services, and decide whether to use `ctx.onNext()`, `ctx.onFinish()`, or `ctx.onJumpTo()`
+
+For native iOS, keep the same router idea, but return `.handled` or `.performDefault` from `onCustomAction(...)` instead of calling navigation callbacks.
 
 <CodeGroup>
 
@@ -358,10 +408,80 @@ Future<void> launchOnboarding(BuildContext context) async {
 }
 ```
 
+```swift iOS
+import FlowboardSwiftCore
+import FlowboardSwiftUIKit
+import UIKit
+
+enum AppFlowboardAction: String {
+  case openCheckout = "open_checkout"
+  case createAccount = "create_account"
+}
+
+func readString(_ payload: [String: FlowboardJSONValue], _ key: String) -> String {
+  payload.string(key)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+}
+
+@MainActor
+func routeFlowboardAction(_ ctx: FlowboardActionContext) -> FlowboardActionResolution {
+  let payload = ctx.action.payload
+  let actionName = readString(payload, "name")
+
+  switch AppFlowboardAction(rawValue: actionName) {
+  case .openCheckout:
+    let planValue = readString(payload, "plan")
+    let plan = planValue.isEmpty ? "free" : planValue
+
+    billing.presentCheckout(
+      plan: plan,
+      customerEmail: ctx.values.string("email")
+    )
+    return .handled
+
+  case .createAccount:
+    Task {
+      try? await api.post(
+        "/signup",
+        body: [
+          "email": ctx.values.string("email") ?? "",
+          "password": ctx.values.string("password") ?? "",
+          "referralCode": readString(payload, "referralCode")
+        ]
+      )
+    }
+    return .handled
+
+  case .none:
+    return .performDefault
+  }
+}
+
+func launchOnboarding(from host: UIViewController) {
+  Task {
+    do {
+      try await Flowboard.launchOnboarding(
+        from: host,
+        options: .init(
+          onCustomAction: { ctx in
+            routeFlowboardAction(ctx)
+          },
+          onAction: { ctx in
+            print("Flowboard action:", ctx.action.kind, ctx.screenID)
+            return .performDefault
+          }
+        )
+      )
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
+}
+```
+
 </CodeGroup>
 
 <Note>
-  Replace `billing` and `api` with your own services. The important contract is the action name, the parsed payload, and the Flowboard navigation callback you call after your business logic completes.
+  Replace `billing` and `api` with your own services. On native iOS, the important contract is the action name, the parsed payload, and whether you return `.handled` or `.performDefault`.
 </Note>
 
 ## Practical guidance
@@ -371,6 +491,6 @@ Use custom actions when Flowboard should trigger:
 - A purchase flow from your billing SDK
 - Account creation or profile updates in your backend
 - Native features that are specific to your app
-- Branching decisions that depend on both `ctx.formData` and action-specific payload
+- Branching decisions that depend on both collected flow values and action-specific payload
 
-Use `actionData` for business parameters and `ctx.formData` for answers already collected in the flow.
+Use `actionData` for business parameters and `ctx.formData` or `ctx.values` for answers already collected in the flow.

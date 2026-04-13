@@ -22,7 +22,7 @@ You can read that data in three places:
 | --- | --- | --- |
 | `onOnboardEnd(formData)` | When the flow is completed | The final collected data |
 | `onStepChange(pageId, pageStep, formData)` | When you want progress-aware analytics or autosave | The current data snapshot at that step |
-| `ctx.formData` | Inside a custom screen or custom action | The latest data collected before that screen or action |
+| `ctx.formData` / `ctx.values` | Inside a custom screen or custom action, where supported by the SDK | The latest data collected before that screen or action |
 
 ## Simple example
 
@@ -87,6 +87,33 @@ Future<void> startFlow(BuildContext context) async {
 }
 ```
 
+```swift iOS
+import FlowboardSwiftCore
+import FlowboardSwiftUIKit
+
+func startFlow() {
+  Task {
+    do {
+      try await Flowboard.launchOnboarding(
+        from: self,
+        options: .init(
+          onOnboardEnd: { formData in
+            let email =
+              formData.string("email")?
+              .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let selectedPlan = formData.string("plan") ?? "free"
+
+            print("Flow completed: email=\(email), plan=\(selectedPlan)")
+          }
+        )
+      )
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
+}
+```
+
 </CodeGroup>
 
 <Tip>
@@ -97,7 +124,7 @@ Future<void> startFlow(BuildContext context) async {
 
 You do not have to wait until completion.
 
-Use `onStepChange` for analytics, progress-aware UI, or autosave, and use `ctx.formData` inside custom screens when a screen needs values from earlier steps.
+Use `onStepChange` for analytics and autosave. On SDKs that expose custom screens or custom actions, you can also read the current answers from `ctx.formData` or `ctx.values`.
 
 <CodeGroup>
 
@@ -151,7 +178,40 @@ await Flowboard.launchOnboarding(
 );
 ```
 
+```swift iOS
+import FlowboardSwiftCore
+import FlowboardSwiftUIKit
+
+func startFlow() {
+  Task {
+    do {
+      try await Flowboard.launchOnboarding(
+        from: self,
+        options: .init(
+          onStepChange: { pageId, pageStep, formData in
+            analytics.track(
+              "flow_step_viewed",
+              properties: [
+                "pageId": pageId ?? "",
+                "pageStep": pageStep,
+                "selectedPlan": formData.string("plan") ?? ""
+              ]
+            )
+          }
+        )
+      )
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
+}
+```
+
 </CodeGroup>
+
+<Note>
+  The current Swift package exposes `onOnboardEnd`, `onStepChange`, and `ctx.values` inside action callbacks for native data access. Native custom-screen builders are not part of the Swift package surface today.
+</Note>
 
 ## Recommended production setup
 
@@ -355,6 +415,80 @@ Future<void> launchSignupFlow(BuildContext context) async {
 }
 ```
 
+```swift iOS
+import FlowboardSwiftCore
+import FlowboardSwiftUIKit
+import UIKit
+
+struct FlowboardSignupPayload: Encodable {
+  let email: String
+  let fullName: String
+  let plan: String
+  let acceptedTerms: Bool
+}
+
+func readString(_ formData: [String: FlowboardJSONValue], _ key: String) -> String {
+  formData.string(key)?
+    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+}
+
+func readPlan(_ formData: [String: FlowboardJSONValue]) -> String {
+  switch formData.string("plan") {
+  case "pro", "team":
+    return formData.string("plan") ?? "free"
+  default:
+    return "free"
+  }
+}
+
+func buildFlowboardSignupPayload(
+  from formData: [String: FlowboardJSONValue]
+) -> FlowboardSignupPayload {
+  FlowboardSignupPayload(
+    email: readString(formData, "email"),
+    fullName: readString(formData, "fullname"),
+    plan: readPlan(formData),
+    acceptedTerms: formData.bool("accept_terms") ?? false
+  )
+}
+
+func submitOnboardingResult(_ payload: FlowboardSignupPayload) async throws {
+  try await api.post("/onboarding/complete", body: payload)
+}
+
+func launchSignupFlow(from host: UIViewController) {
+  Task {
+    do {
+      try await Flowboard.launchOnboarding(
+        from: host,
+        options: .init(
+          onStepChange: { pageId, pageStep, formData in
+            let payload = buildFlowboardSignupPayload(from: formData)
+
+            analytics.track(
+              "flow_step_viewed",
+              properties: [
+                "pageId": pageId ?? "",
+                "pageStep": pageStep,
+                "plan": payload.plan
+              ]
+            )
+          },
+          onOnboardEnd: { formData in
+            let payload = buildFlowboardSignupPayload(from: formData)
+            Task {
+              try? await submitOnboardingResult(payload)
+            }
+          }
+        )
+      )
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
+}
+```
+
 </CodeGroup>
 
 <Note>
@@ -367,5 +501,5 @@ Use this rule:
 
 - Read final data in `onOnboardEnd`
 - Read progress snapshots in `onStepChange`
-- Read live values in `ctx.formData`
+- Read live values in `ctx.formData` or `ctx.values`, depending on the SDK surface you use
 - Normalize the payload before sending it to your backend
