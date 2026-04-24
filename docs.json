@@ -17,7 +17,7 @@
             "group": "Getting started",
             "pages": [
               "welcome-to-flowboard",
-              "pricing-and-billing",
+              "auto-setup",
               "quick-start"
             ]
           },
@@ -55,6 +55,13 @@
                   "features/pulse"
                 ]
               }
+            ]
+          },
+          {
+            "group": "AI",
+            "pages": [
+              "use-mcp",
+              "screenshot-figma-converter"
             ]
           },
           {
