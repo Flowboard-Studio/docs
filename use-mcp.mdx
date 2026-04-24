@@ -1,4 +1,154 @@
 ---
 title: "MCP"
+description: "Connect AI tools to Flowboard with MCP to read live flows, edit visual-editor drafts, and inspect analytics."
 icon: "https://upload.wikimedia.org/wikipedia/commons/f/fe/Model_Context_Protocol_logo.svg"
 ---
+
+> Connect AI tools to Flowboard with the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction).
+
+Flowboard MCP gives compatible AI clients access to your Flowboard app so they can inspect live flows, work against the visual editor draft, and read analytics.
+
+<Warning>
+  Flowboard MCP requires an API key. In the Flowboard dashboard, open your app, then go to **App settings** → **Integrations** to create an MCP key.
+</Warning>
+
+## Connect
+
+- MCP URL: `https://mcp.flow-board.co`
+- Auth: `Authorization: Bearer <your_mcp_key>`
+- MCP keys are generated with `flows:read`, `flows:write`, and `stats:read`
+
+Most remote MCP clients accept a config like this:
+
+```json
+{
+  "mcpServers": {
+    "flowboard": {
+      "url": "https://mcp.flow-board.co",
+      "headers": {
+        "Authorization": "Bearer <your_mcp_key>"
+      }
+    }
+  }
+}
+```
+
+## Setup by tool
+
+<Info>
+  Flowboard works best in MCP clients that let you send a custom `Authorization` header directly.
+</Info>
+
+<Accordion title="Cursor">
+  Create `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for a global setup.
+
+  ```json
+  {
+    "mcpServers": {
+      "flowboard": {
+        "url": "https://mcp.flow-board.co",
+        "headers": {
+          "Authorization": "Bearer <your_mcp_key>"
+        }
+      }
+    }
+  }
+  ```
+</Accordion>
+
+<Accordion title="VS Code">
+  Create `.vscode/mcp.json` in your workspace.
+
+  ```json
+  {
+    "servers": {
+      "flowboard": {
+        "type": "http",
+        "url": "https://mcp.flow-board.co",
+        "headers": {
+          "Authorization": "Bearer <your_mcp_key>"
+        }
+      }
+    }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Windsurf">
+  Open **Windsurf Settings** → **Tools** → **Windsurf Settings** → **Add Server**. For raw config, edit `~/.codeium/mcp_config.json`.
+
+  ```json
+  {
+    "mcpServers": {
+      "flowboard": {
+        "serverUrl": "https://mcp.flow-board.co",
+        "headers": {
+          "Authorization": "Bearer <your_mcp_key>"
+        }
+      }
+    }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Antigravity">
+  Open the agent panel, click `...` → **MCP Servers** → **Manage MCP Servers** → **View raw config**, then update `mcp_config.json`.
+
+  ```json
+  {
+    "mcpServers": {
+      "flowboard": {
+        "serverUrl": "https://mcp.flow-board.co",
+        "headers": {
+          "Authorization": "Bearer <your_mcp_key>"
+        }
+      }
+    }
+  }
+  ```
+
+  If your Antigravity build expects `url` instead of `serverUrl`, use the same endpoint under `url`.
+</Accordion>
+
+## What Flowboard exposes
+
+Flowboard MCP exposes product capabilities, not raw database access. In practice, it is backed by these stores:
+
+| Backing store or source | Exposed through MCP |
+| --- | --- |
+| `onboardings` | Published flow metadata, live runtime JSON, localized screens, publish state |
+| `onboardingDrafts` | Visual-editor draft project, draft versions, and draft updates |
+| `audiences` | Live flow resolution for an app/install context |
+| `screenCatalogItems` | Built-in Flowboard templates plus team and app screen-library items used for generation and editing |
+| `aiEditOperations` + `onboardings.aiLock` | Async edit status and draft locking for long-running editor edits |
+| BigQuery analytics dataset (`raw_events`) | Read-only app, flow, viewer, and experiment metrics |
+
+For screen-library content, the AI layer pulls from:
+
+- Flowboard templates: `screenCatalogItems` with `sourceType: flowboard`
+- Team and app library items: `screenCatalogItems` with `sourceType: team`, filtered by `teamId` and optionally `sourceAppId`
+
+## Editor-aware workflows
+
+Flowboard MCP is aware of the Flowboard editor model:
+
+- It can read the current draft and the published flow separately
+- AI edits are draft-first and do not publish automatically
+- Screen edits support a preview-first flow before apply
+- Long-running edits are tracked and can temporarily lock the draft to avoid conflicting writes
+
+Typical editor actions include:
+
+- Generate a new flow
+- Edit an existing draft flow
+- Preview or apply a single-screen edit
+- Generate a screen from an image
+- Insert a generated screen into an existing flow
+- Inspect flow analytics while iterating on the draft
+
+## Example prompts
+
+- "Fetch the draft version of flow `flow_123` and summarize each screen."
+- "Preview a rewrite of the pricing screen to make it feel more premium, but do not apply it yet."
+- "Insert a new testimonial screen before the paywall."
+- "Show the last 30 days of funnel metrics for flow `flow_123`."

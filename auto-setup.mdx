@@ -2,3 +2,134 @@
 title: "Auto Setup (recommended)"
 icon: "wand-magic-sparkles"
 ---
+
+Fastest way to add Flowboard to your app is to connect the Flowboard Docs MCP to your IDE, then let your coding agent do the setup for you.
+
+<Info>
+  This page is about the Flowboard Docs MCP at `https://docs.flow-board.co/mcp`. It exposes the Flowboard documentation directly to your IDE so your agent can follow the latest setup steps automatically.
+
+  This works well for any Flowboard-supported stack, including **React Native**, **Expo development builds**, **Flutter**, **iOS / Swift** (`UIKit` or `SwiftUI`), and **native Android**.
+</Info>
+
+## Before you start
+
+Make sure you have:
+
+- An existing app project opened in your IDE
+- Access to [Flowboard Studio](https://studio.flow-board.co/)
+- One published flow
+- One API key for your mobile app integration
+
+<Warning>
+  If you are using Expo, Expo Go is not supported because Flowboard uses native modules. Use an Expo development build, `expo prebuild`, or EAS Build instead.
+</Warning>
+
+## 1. Add the Flowboard Docs MCP to your IDE
+
+<Accordion title="Cursor">
+  Create `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for a global setup.
+
+  ```json
+  {
+    "mcpServers": {
+      "flowboardDocs": {
+        "url": "https://docs.flow-board.co/mcp"
+      }
+    }
+  }
+  ```
+</Accordion>
+
+<Accordion title="VS Code">
+  Create `.vscode/mcp.json` in your workspace.
+
+  ```json
+  {
+    "servers": {
+      "flowboardDocs": {
+        "type": "http",
+        "url": "https://docs.flow-board.co/mcp"
+      }
+    }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Windsurf">
+  Open **Windsurf Settings** → **Tools** → **Windsurf Settings** → **Add Server**. For raw config, edit `~/.codeium/mcp_config.json`.
+
+  ```json
+  {
+    "mcpServers": {
+      "flowboardDocs": {
+        "serverUrl": "https://docs.flow-board.co/mcp"
+      }
+    }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Antigravity">
+  Open the agent panel, click `...` → **MCP Servers** → **Manage MCP Servers** → **View raw config**, then update `mcp_config.json`.
+
+  ```json
+  {
+    "mcpServers": {
+      "flowboardDocs": {
+        "serverUrl": "https://docs.flow-board.co/mcp"
+      }
+    }
+  }
+  ```
+
+  If your Antigravity build expects `url` instead of `serverUrl`, use the same endpoint under `url`.
+</Accordion>
+
+<Accordion title="Codex">
+  Add the MCP with the CLI:
+
+  ```bash
+  codex mcp add flowboardDocs --url https://docs.flow-board.co/mcp
+  ```
+
+  Or add it directly in `~/.codex/config.toml`:
+
+  ```toml
+  [mcp_servers.flowboardDocs]
+  url = "https://docs.flow-board.co/mcp"
+  ```
+</Accordion>
+
+## 2. Ask your agent to do the setup
+
+Once the MCP is connected, open your app root in the IDE and paste a prompt like this:
+
+```text
+Using the Flowboard MCP Tools doc Docs, install and setup Flowboard inside my app. My stack is [your stack]. Make sure to add a button to show a flow on the first screen.
+```
+
+<Tip>
+  Be explicit about your stack and entry file. Example: `My stack is SwiftUI and the first screen is ContentView.swift.` Example: `My stack is React Native and the first screen is App.tsx.`
+</Tip>
+
+## 3. What the agent should do
+
+With the docs MCP available, your IDE agent should be able to:
+
+- Choose the correct Flowboard setup path for your stack
+- Install the right package or SDK
+- Initialize Flowboard in app startup
+- Add any required provider or runtime wiring
+- Add a button on the first screen that launches a flow
+- Leave the app in a runnable state
+
+## 4. Verify
+
+After the agent finishes:
+
+- Start the app with your normal development setup
+- Open the first screen
+- Tap the button the agent added
+- Confirm your published flow opens correctly
+
+If you prefer to do the integration manually, use the [Quick start](/quick-start) guide.
