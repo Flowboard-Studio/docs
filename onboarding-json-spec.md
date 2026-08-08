@@ -50,6 +50,7 @@ Scope:
 - A runtime screen is either:
   - a normal screen with `children`
   - a `type: "custom"` screen with a `properties` object
+  - a `type: "paywall"` screen with a `properties` object containing a non-empty `placement` string
 - Runtime validation currently requires at least one `finish` action somewhere in the flow. It only warns, not fails, if the last screen has no `finish`.
 
 Runtime builder and canonicalizer rules:
@@ -1154,7 +1155,7 @@ Rendering intent: Render one resolved string.
 | Property | Type | Req | Default | Notes |
 | --- | --- | --- | --- | --- |
 | `text` | string | yes | none | Supports expression resolution. |
-| `fontFamily` | string | no | platform default | React Native / Flutter only. |
+| `fontFamily` | string | no | platform default | React Native / Flutter only. React Native resolves platform families directly and can auto-load Google Fonts on native. |
 | `fontSize` | number | no | `14` React Native / Flutter, `16` iOS / Android | |
 | `fontWeight` | string or number | no | regular | Basic weight support on all app SDKs. |
 | `fontStyle` | string | no | normal | React Native / Flutter only. |
@@ -1171,6 +1172,7 @@ Display behavior:
 
 - All app SDKs resolve `{{...}}` expressions before rendering.
 - React Native / Flutter can render gradient text through `foreground`.
+- React Native keeps system/custom `fontWeight` active until a concrete native font variant is available, so unresolved families do not collapse to one default face.
 
 Layout behavior:
 
@@ -1235,7 +1237,9 @@ Rendering intent: Render multiple styled text segments as one rich label.
 | `spans[].color` | color | no | black / label | All app SDKs use span colors. |
 | `spans[].fontSize` | number | no | platform default | All app SDKs use it. |
 | `spans[].fontWeight` | string or number | no | regular | React Native / Flutter / iOS. Android rich text only applies size and color. |
-| `spans[].fontFamily`, `spans[].fontStyle`, `spans[].letterSpacing`, `spans[].height`, `spans[].decoration`, `spans[].foreground` | mixed | no | none | React Native / Flutter only. |
+| `spans[].fontFamily`, `spans[].fontStyle`, `spans[].letterSpacing`, `spans[].decoration` | mixed | no | none | React Native / Flutter / iOS. React Native also auto-loads Google Fonts families on native when possible. |
+| `spans[].height` | number | no | `1.2` | Line height for **that span**, as a multiplier of the span's own `fontSize` (values above `3` are read as points on iOS). React Native / Flutter / iOS (iOS since 1.7.0). A component-level `lineHeight` / `height` is the fallback for spans without one. See `render-spec/rich-text-span-line-height-v1.md`. |
+| `spans[].foreground` | object | no | none | Per-span gradient. React Native / Flutter only — iOS applies only a whole-component `foreground`. |
 | `textAlign` | string | no | start / left | All app SDKs use it. |
 | `foreground` | object | no | none | Whole-label gradient on React Native / Flutter / Web Preview only. |
 | `margin` | number or insets object | no | `0` | Standard wrapper margin. |
@@ -1410,7 +1414,7 @@ Rendering intent: Collect one string value into runtime `formData[id]`.
 | `placeholder` | string | no | none | Hint text. |
 | `keyboardType` | string | no | default keyboard | `email`, `number`, `phone`, `multiline` are the current meaningful values. |
 | `autoCapitalize` | string | no | platform default | React Native / Flutter only. |
-| `mask` | string | no | none | React Native / Flutter only. |
+| `mask` | string | no | none | React Native / Flutter / iOS (iOS since 1.7.0). Draft alias: `maskPattern`. `#` = digit, `A` = letter, any other character is a literal inserted lazily (the separator appears with the character that follows it). `formData[id]` receives the **masked** string on Flutter and iOS; React Native writes the unmasked one. See `render-spec/text-input-mask-v1.md`. |
 | `backgroundColor` | color | no | light gray fallback | Input fill color. |
 | `textColor` | color | no | black | Input text color. |
 | `borderRadius` / `strokeRadius` | number | no | `8` | Input corner radius. |
@@ -1422,8 +1426,10 @@ Rendering intent: Collect one string value into runtime `formData[id]`.
 | `required` | boolean | no | `false` | Validated by flow containers, not by the widget itself. |
 | `regex` | string | no | none | Validated by flow containers, not by the widget itself. |
 | `labelStyle` | object | no | none | React Native / Flutter only. |
-| `hintStyle` | object | no | none | React Native / Flutter only. |
-| `placeholderStyle` | object | no | none | Effectively Web Preview only. |
+| `hintStyle` | object | no | none | React Native / Flutter / Web Preview / iOS. Fallback for `placeholderStyle`. |
+| `placeholderStyle` | object | no | `fontSize: 14` | Web Preview / iOS. Takes precedence over `hintStyle`. |
+| `placeholderColor` | color | no | `0xFF9E9E9E` | Web Preview / iOS. Wins over `placeholderStyle.color`. |
+| `hintColor` | color | no | `0xFF9E9E9E` | Web Preview / iOS. Alias of `placeholderColor`, lower precedence. |
 | `obscureText` | boolean | no | `false` | React Native / Flutter only. |
 | `maxLength` | number | no | none | React Native / Flutter only. |
 | `margin` | number or insets object | no | `0` | Standard wrapper margin. |
@@ -1431,7 +1437,7 @@ Rendering intent: Collect one string value into runtime `formData[id]`.
 Display behavior:
 
 - React Native / Flutter render styled text fields with label, placeholder, fill, border, and text styling.
-- iOS renders `UITextField` or `UITextView` with basic styling.
+- iOS renders a `UITextField` with label, styled placeholder, fill, border, icons, and an error line.
 - Android renders a simple `EditText` in a `LinearLayout`.
 
 Layout behavior:
@@ -1448,6 +1454,7 @@ Known SDK differences:
 
 - React Native and Flutter always set `autoFocus: true`.
 - iOS treats `keyboardType == "multiline"` as a multiline control.
+- iOS supports `mask` and writes the masked string into `formData[id]`; it still ignores `obscureText` and `maxLength`.
 - Android ignores `keyboardType`, `autoCapitalize`, `mask`, `obscureText`, `maxLength` style objects, and regex at render time.
 - Flutter does not visibly support dashed or dotted border styles.
 
@@ -1809,7 +1816,7 @@ Display behavior:
 
 - React Native and Flutter render real Lottie animations.
 - Android renders `LottieAnimationView`.
-- iOS currently renders a placeholder label that says `Lottie`.
+- iOS renders real Lottie JSON playback through `LottieAnimationView`.
 
 Layout behavior:
 
@@ -1821,7 +1828,7 @@ Interaction behavior:
 
 Known SDK differences:
 
-- iOS has no real Lottie playback in the current renderer.
+- iOS coverage is currently strongest for JSON sources from local paths, bundle resources, and remote URLs.
 - Android accepts remote URLs and local animation names / paths.
 
 Minimal JSON example:

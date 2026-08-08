@@ -1,0 +1,115 @@
+---
+title: "Paywall screen"
+description: "Display your app's paywall (RevenueCat or similar) as a flow step, with per-screen analytics."
+icon: "credit-card"
+---
+
+Use a paywall screen when a step of your flow should display your app's paywall. The screen is part of the flow JSON (`type: "paywall"`), but the paywall UI itself is rendered by your app — Flowboard never embeds a purchase SDK.
+
+Unlike a custom screen, a paywall screen is routed **by type**, not by id: you register one `paywallScreenBuilder` and it serves every paywall screen in every flow. Each screen keeps its own **unique id**, so a flow can contain several paywalls (for example one early and one at the end) and Pulse shows them as separate funnel steps.
+
+The builder receives the same context object as `customScreenBuilder`:
+
+- `ctx.screenData`: the JSON for the current paywall screen — read the placement from its `properties.placement`
+- `ctx.formData`: the data already collected in the flow
+- `ctx.onNext()`: move to the next screen
+- `ctx.onPrevious()`: move to the previous screen
+- `ctx.onFinish()`: end the flow
+- `ctx.onJumpTo(screenId)`: jump to another screen in the same flow
+
+## Basic flow shape
+
+```json
+{
+  "type": "paywall",
+  "id": "paywall_intro",
+  "properties": {
+    "placement": "onboarding_intro"
+  }
+}
+```
+
+- `id` — unique per screen. It is the `step_id` used by analytics, so two paywalls with different ids show up as two funnel rows.
+- `properties.placement` — the string passed to your builder. Map it to a RevenueCat placement (or your own equivalent) to decide which paywall to show.
+
+## Navigation (soft gate)
+
+A paywall screen never blocks the flow. Call `ctx.onNext()` in both outcomes:
+
+- after a successful purchase
+- after the user dismisses the paywall
+
+If no `paywallScreenBuilder` is registered, the SDK skips paywall screens entirely (no blank screen, no `screen_view` event for the skipped step).
+
+## Example
+
+<CodeGroup>
+
+```swift iOS
+import FlowboardSwiftCore
+import FlowboardSwiftUIKit
+import UIKit
+
+func startFlow(from host: UIViewController) {
+  Task {
+    do {
+      try await Flowboard.launchOnboarding(
+        from: host,
+        options: .init(
+          paywallScreenBuilder: { ctx in
+            let placement = ctx.screenData.properties.string("placement") ?? "default"
+            // Present your RevenueCat paywall for this placement.
+            // Soft gate: call ctx.onNext() after purchase AND after dismiss.
+            return MyPaywallViewController(
+              placement: placement,
+              onDone: { ctx.onNext() }
+            )
+          }
+        )
+      )
+    } catch {
+      print("Failed to launch Flowboard:", error)
+    }
+  }
+}
+```
+
+```dart Flutter
+import 'package:flutter/material.dart';
+import 'package:flowboard_flutter/flowboard_flutter.dart';
+
+Future<void> startFlow(BuildContext context) async {
+  await Flowboard.launchOnboarding(
+    context,
+    paywallScreenBuilder: (ctx) {
+      final properties =
+          ctx.screenData['properties'] as Map<String, dynamic>? ?? {};
+      final placement = properties['placement'] as String? ?? 'default';
+
+      // Present your RevenueCat paywall for this placement.
+      // Soft gate: call ctx.onNext() after purchase AND after dismiss.
+      return MyPaywallScreen(
+        placement: placement,
+        onDone: ctx.onNext,
+      );
+    },
+  );
+}
+```
+
+</CodeGroup>
+
+<Note>
+  Platform support: paywall screens require flowboard-pckg-swift and flowboard_flutter versions that include the `paywallScreenBuilder` API. React Native / Expo and Android (Kotlin) do not implement the paywall screen type yet, and **older SDK versions render a paywall screen as a blank step** — only add paywall screens to flows served to apps running a supporting SDK.
+</Note>
+
+## Migrating from the `rc_paywall` custom screen
+
+Previously the common pattern was a `type: "custom"` screen with id `rc_paywall` and a free-form payload `{ "placement": "..." }`. That pattern keeps working unchanged.
+
+The paywall type improves on it in two ways:
+
+- **Analytics** — with `customScreenBuilder` the id doubles as the routing key, so every paywall ends up with the same id and Pulse merges them into a single funnel step. Paywall screens are routed by type, so each screen keeps a unique id and its own funnel row.
+- **Typed editor UI** — the dashboard edits `placement` in a dedicated field instead of a raw JSON textarea.
+
+To migrate a flow, replace the custom screen with a paywall screen carrying a unique id, and register `paywallScreenBuilder` alongside (or instead of) your `rc_paywall` branch in `customScreenBuilder`.

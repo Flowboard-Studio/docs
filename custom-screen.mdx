@@ -6,6 +6,10 @@ icon: "code"
 
 Use a custom screen when one step of your flow should be rendered by your app instead of by the standard Flowboard renderer.
 
+<Tip>
+  Building a paywall? Use the dedicated [paywall screen](/paywall-screen) instead: it is routed by type (no id-based switch), carries a typed `placement` property, and keeps a unique id per screen so multiple paywalls show up as separate analytics steps.
+</Tip>
+
 When Flowboard reaches a screen with `type: "custom"`, the React Native and Flutter SDKs call your `customScreenBuilder`.
 
 On SDKs that expose `customScreenBuilder`, the builder receives a context object with:
@@ -191,7 +195,7 @@ func startFlow(from host: UIViewController) {
 </CodeGroup>
 
 <Note>
-  The native iOS example above is a workaround. It launches your own UIKit surface from a custom action, but it does not replace a Flowboard `type: "custom"` screen inside the flow because that API is not yet exposed in the Swift package.
+  The Swift package now exposes `customScreenBuilder` in `FlowboardLaunchOptions` — pass a `@MainActor (FlowboardContext) -> UIViewController` closure to replace a `type: "custom"` screen natively, exactly like the React Native and Flutter examples. The `onCustomAction` example above remains useful when you want to present a native surface from a button action instead of replacing a screen.
 </Note>
 
 <Tip>

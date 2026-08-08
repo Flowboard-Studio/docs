@@ -70,6 +70,7 @@
               "display-flow",
               "retrieve-flow-data",
               "custom-screen",
+              "paywall-screen",
               "custom-actions",
               "custom-tracking"
             ]
